@@ -216,6 +216,8 @@ class Packguy
       files = Dir.glob(File.join(@opts[:path] || Dir.pwd, '{,*}.gemspec'))
     end
 
+    puts 'Found gemspec on: %s' % files.inspect
+
     unless files.empty?
       File.expand_path(files.first)
     else

@@ -7,4 +7,5 @@ ENV['FPM_EXEC_PATH'] = File.expand_path('../fpm', __FILE__)
 ENV['PACKGUY_PACKAGES'] = 'deb'
 
 Packguy.setup
+Packguy.config[:path] = File.expand_path(ARGV[1])
 Packguy.build_package

@@ -44,6 +44,7 @@ fi
 # Will be converted into a ENV var later.
 export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
 
+echo "Using Gemfile $BUNDLE_GEMFILE"
 if [ ! -f "$BUNDLE_GEMFILE.lock" ]; then
   echo "Bundling repo in $build..."
   cd "$build"
