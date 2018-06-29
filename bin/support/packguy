@@ -6,4 +6,3 @@ require 'packguy'
 
 Packguy.setup
 Packguy.create_deb
-Packguy.create_rpm
