@@ -8,7 +8,7 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 # Arguments
-build=$1; cache=$2
+build=$(cd "$1"; pwd); cache=$(cd "$2"; pwd)
 
 if [ -n "$build" ]; then
   # Sanity checks

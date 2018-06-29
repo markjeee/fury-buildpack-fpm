@@ -1,8 +1,9 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.expand_path('../../../lib', __FILE__)
-
 require 'packguy'
+
+ENV['FPM_EXEC_PATH'] = File.expand_path('../fpm', __FILE__)
 
 Packguy.setup
 Packguy.create_deb

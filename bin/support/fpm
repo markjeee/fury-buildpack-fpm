@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+buildpack_fpm_dir=$(cd "$(dirname $0)/../.."; pwd)
+echo "Executing fpm from: $buildpack_fpm_dir"
+
+BUNDLE_GEMFILE="$buildpack_fpm_dir/Gemfile"
+bundle exec fpm "$@"

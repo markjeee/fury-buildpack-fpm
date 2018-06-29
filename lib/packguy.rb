@@ -9,6 +9,7 @@ class Packguy
   PACKGUY_PACKFILE = 'Packfile'
 
   DEFAULT_CONFIG = {
+    :path => nil,
     :gemspec => nil,
     :gemfile => nil,
     :binstub =>  nil,
@@ -54,7 +55,7 @@ class Packguy
 
   def self.search_up(*names)
     previous = nil
-    current  = File.expand_path(Dir.pwd).untaint
+    current  = File.expand_path(config[:path] || Dir.pwd).untaint
     found_path = nil
 
     until !File.directory?(current) || current == previous || !found_path.nil?
@@ -118,8 +119,9 @@ class Packguy
 
     deb_package_file = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, deb_package_file)
-    cmd = 'fpm --log info -f -s dir -t deb -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
-          [ packager.architecture,
+    cmd = '%s --log info -f -s dir -t deb -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+          [ fpm_exec_path,
+            packager.architecture,
             packager.maintainer,
             packager.package_name,
             packager.version,
@@ -144,8 +146,9 @@ class Packguy
 
     rpm_package_file = '%s_%s_%s.rpm' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, rpm_package_file)
-    cmd = 'fpm --log info -f -s dir -t rpm --rpm-os linux -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
-          [ packager.architecture,
+    cmd = '%s --log info -f -s dir -t rpm --rpm-os linux -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+          [ fpm_exec_path,
+            packager.architecture,
             packager.maintainer,
             packager.package_name,
             packager.version,
@@ -160,6 +163,10 @@ class Packguy
     system(cmd)
 
     [ packager, pkg_file ]
+  end
+
+  def self.fpm_exec_path
+    ENV['FPM_EXEC_PATH'] || 'fpm'
   end
 
   def initialize(opts = { })
@@ -184,7 +191,7 @@ class Packguy
     gemfile_dirpath = @gemfile.untaint.expand_path.parent
     files = Dir.glob(File.join(gemfile_dirpath, '{,*}.gemspec'))
     if files.empty?
-      files = Dir.glob(File.join(Dir.pwd, '{,*}.gemspec'))
+      files = Dir.glob(File.join(@opts[:path] || Dir.pwd, '{,*}.gemspec'))
     end
 
     unless files.empty?
@@ -198,8 +205,10 @@ class Packguy
     if defined?(@bundle_def)
       @bundle_def
     else
-      gemfile_lock = Pathname.new('%s.lock' % @gemfile)
-      @bundle_def = Bundler::Definition.build(@gemfile, gemfile_lock, nil)
+      ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
+
+      ::Bundler.setup(:default)
+      @bundle_def = ::Bundler.definition
     end
   end
 
@@ -216,7 +225,7 @@ class Packguy
   def bundle_gems
     specs = bundler_definition.specs_for([ :default ])
     gem_paths = specs.collect do |spec|
-      if gemspec.nil? || spec.name != gemspec.name
+      if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
         paths = [ spec.full_gem_path ]
         paths.concat(spec.full_require_paths.collect { |path| path.gsub(paths[0], '') })
       else
