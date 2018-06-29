@@ -35,7 +35,7 @@ else
   cd "$buildpack_fpm_dir"
   echo "Using ruby    : $(ruby -v)"
   echo "Using bundler : $(bundle -v)"
-  bundle
+  bundle install --deployment
 
   cd "$build"
   $bin_dir/support/packguy "$build" "$cache"
