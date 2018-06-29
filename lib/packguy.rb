@@ -139,7 +139,7 @@ class Packguy
     pkg_file = File.join(packager.pkg_path, deb_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log info -f -s dir -t deb -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+    cmd = '%s --log warn -f -s dir -t deb -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -168,7 +168,7 @@ class Packguy
     pkg_file = File.join(packager.pkg_path, rpm_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log info -f -s dir -t rpm --rpm-os linux -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m %s -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
