@@ -32,12 +32,15 @@ else
   bin_dir=$(cd $(dirname $0); pwd)
   buildpack_fpm_dir=$(dirname "$bin_dir")
 
-  cd "$buildpack_fpm_dir"
   echo "Using ruby    : $(ruby -v)"
   echo "Using bundler : $(bundle -v)"
-  echo "Using fpm     : $(fpm -v)"
+
+  cd "$buildpack_fpm_dir"
+  bundle install --deployment
 
   cd "$build"
+  bundle install --without development test
+
   $bin_dir/support/packguy "$build" "$cache"
   exit ${PIPESTATUS[0]}
 fi
