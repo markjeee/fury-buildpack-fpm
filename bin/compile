@@ -22,19 +22,27 @@ fi
 if [ "$spc_count" -gt 1 ]; then
   echo "ERROR: Multiple .gemspec files present in package root"
   exit 1
-else
-  bin_dir=$(cd $(dirname $0); pwd)
-  buildpack_fpm_dir=$(dirname "$bin_dir")
-
-  echo "Using ruby    : $(ruby -v)"
-  echo "Using bundler : $(bundle -v)"
-
-  cd "$buildpack_fpm_dir"
-  bundle install --path vendor/bundle --without development test
-
-  cd "$build"
-  bundle install --path vendor/bundle --without development test
-
-  $bin_dir/support/packguy "$build" "$cache"
-  exit ${PIPESTATUS[0]}
 fi
+
+bin_dir=$(cd $(dirname $0); pwd)
+buildpack_fpm_dir=$(dirname "$bin_dir")
+
+echo "Build pack dir : $buildpack_fpm_dir"
+echo "Using ruby     : $(ruby -v)"
+echo "Using bundler  : $(bundle -v)"
+
+fpm_path=$(which fpm)
+if [ -z "$fpm_path" ]; then
+  if [ ! -f "$buildpack_fpm_dir/.bundle/config" ]; then
+    echo "Bundling fury-buildpack-fpm to install fpm executable..."
+    cd "$buildpack_fpm_dir"
+    bundle install --path vendor/bundle --without development test
+  fi
+fi
+
+echo "Bundling repo in $build..."
+cd "$build"
+bundle install --path vendor/bundle --without development test
+
+$bin_dir/support/packguy "$build" "$cache"
+exit ${PIPESTATUS[0]}

@@ -9,6 +9,7 @@ task :default => :spec
 
 task :vendorized_fpm do
   Packguy.setup
+  Packguy.config[:working_path] = File.expand_path('../vendor', __FILE__)
   Packguy.config[:package_name] = 'fury-buildpack-fpm'
 
   packager = Packguy.new

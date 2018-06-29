@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+vendor_path = ENV['FURY_BUILDPACK_FPM_VENDOR']
+require File.join(vendor_path, 'bundle/bundler/setup.rb')
+
+require 'fpm'
+require 'fpm/command'
+
+exit(FPM::Command.run || 0)

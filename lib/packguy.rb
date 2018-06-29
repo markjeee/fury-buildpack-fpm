@@ -20,7 +20,8 @@ class Packguy
     :deb_prefix => '/usr/lib/ruby/vendor_ruby/',
 
     # maybe specified, if wanting to override as set in gemspec file
-    :package_name => nil
+    :package_name => nil,
+    :working_path => nil
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -243,24 +244,6 @@ class Packguy
     end
   end
 
-  def bundle_gems
-    specs = bundler_definition.specs_for([ :default ])
-    gem_paths = specs.collect do |spec|
-      if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
-        paths = [ spec.full_gem_path ]
-        paths.concat(spec.full_require_paths.collect { |path| path.gsub(paths[0], '') })
-      else
-        nil
-      end
-    end.compact
-
-    bgems = gem_paths.inject({ }) do |h, a|
-      h[File.basename(a.first)] = a; h
-    end
-
-    bgems
-  end
-
   def root_path
     File.expand_path('./')
   end
@@ -270,7 +253,11 @@ class Packguy
   end
 
   def working_path
-    File.join(root_path, 'tmp/packager_wp')
+    if @opts[:working_path].nil?
+      File.join(root_path, 'tmp/packager_wp')
+    else
+      @opts[:working_path]
+    end
   end
 
   def package_name
@@ -307,6 +294,25 @@ class Packguy
 
   def architecture
     @opts[:architecture]
+  end
+
+  def bundle_gems
+    specs = bundler_definition.specs_for([ :default ])
+    gem_paths = specs.collect do |spec|
+      if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
+        paths = [ spec.full_gem_path ]
+        paths.concat(spec.full_require_paths.collect { |path| path.include?(paths[0]) ? path.gsub(paths[0], '') : nil })
+        paths
+      else
+        nil
+      end
+    end.compact
+
+    bgems = gem_paths.inject({ }) do |h, a|
+      h[File.basename(a.first)] = a; h
+    end
+
+    bgems
   end
 
   def gather_files_for_package
