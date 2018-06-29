@@ -4,6 +4,7 @@ $:.unshift File.expand_path('../../../lib', __FILE__)
 require 'packguy'
 
 ENV['FPM_EXEC_PATH'] = File.expand_path('../fpm', __FILE__)
+ENV['PACKGUY_PACKAGES'] = 'deb'
 
 Packguy.setup
-Packguy.create_deb
+Packguy.build_package

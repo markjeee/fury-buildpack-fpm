@@ -26,13 +26,20 @@ class Packguy
   DEFAULT_PACKAGES = [ :deb, :rpm ]
   DEFAULT_LOCAL_BIN_PATH = '/usr/local/bin'
 
+  PACKAGE_METHOD_MAP = {
+    :deb => :build_deb,
+    :rpm => :build_rpm
+  }
+
   def self.setup
     load_packfile
     setup_defaults
   end
 
   def self.setup_defaults
-    if config[:packages].nil?
+    if ENV.include?('PACKGUY_PACKAGES')
+      config[:packages] = ENV['PACKGUY_PACKAGES'].split(',').collect { |p| p.to_sym }
+    elsif config[:packages].nil?
       config[:packages] = DEFAULT_PACKAGES
     end
   end
@@ -111,7 +118,17 @@ class Packguy
     ret
   end
 
-  def self.create_deb(opts = { })
+  def self.build_package(opts = { })
+    packages = Packguy.config[:packages]
+    packages.each do |pack|
+      build_method = PACKAGE_METHOD_MAP[pack]
+      unless build_method.nil?
+        send(build_method)
+      end
+    end
+  end
+
+  def self.build_deb(opts = { })
     packager = new(opts)
 
     prefix_path = config[:deb_prefix]
@@ -140,7 +157,7 @@ class Packguy
     [ packager, pkg_file ]
   end
 
-  def self.create_rpm(opts = { })
+  def self.build_rpm(opts = { })
     packager = new(opts)
 
     prefix_path = config[:rpm_prefix]
@@ -435,11 +452,6 @@ CODE
 
   if defined?(::Rake)
     class RakeTask < ::Rake::TaskLib
-      PACKAGE_METHOD_MAP = {
-        :deb => :build_deb,
-        :rpm => :build_rpm
-      }
-
       def self.install_tasks
         new.define_tasks
       end
@@ -520,13 +532,13 @@ CODE
 
       def build_deb
         puts 'Building DEB package file...'
-        packager, pkg_path = Packguy.create_deb
+        packager, pkg_path = Packguy.build_deb
         puts 'Done creating DEB: %s' % pkg_path
       end
 
       def build_rpm
         puts 'Building RPM package file...'
-        packager, pkg_path = Packguy.create_rpm
+        packager, pkg_path = Packguy.build_rpm
         puts 'Done creating RPM: %s' % pkg_path
       end
 

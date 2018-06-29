@@ -7,24 +7,18 @@ export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
-# Arguments
 build=$(cd "$1"; pwd); cache=$(cd "$2"; pwd)
 
 if [ -n "$build" ]; then
-  # Sanity checks
   spc_count=$(find "$build" -maxdepth 1 -name '*.gemspec' | wc -l)
 else
   spc_count=0
 fi
 
-# Convert SemVer auto-version to Gem::Version
 if [ -n "$BUILD_VERSION" ]; then
   BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
 fi
 
-# Prepare ourselves for installing
-
-# Let's rock and roll
 if [ "$spc_count" -gt 1 ]; then
   echo "ERROR: Multiple .gemspec files present in package root"
   exit 1
