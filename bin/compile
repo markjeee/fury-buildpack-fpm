@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# Set UTF-8 as the default encoding
+# http://stackoverflow.com/questions/17031651/invalid-byte-sequence-in-us-ascii-argument-error-when-i-run-rake-dbseed-in-ra
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export LANG=en_US.UTF-8
+
+# Arguments
+build=$1; cache=$2
+
+# Sanity checks
+spc_count=$(find "$build" -maxdepth 1 -name '*.gemspec' | wc -l)
+
+# Convert SemVer auto-version to Gem::Version
+if [ -n "$BUILD_VERSION" ]; then
+  BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
+fi
+
+# Let's rock and roll
+if [ "$spc_count" -gt 1 ]; then
+  echo "ERROR: Multiple .gemspec files present in package root"
+  exit 1
+else
+  spec=($build/*.gemspec)
+  cd $build
+  #gem build $spec 2>&1 | sed -e "s/^ */       /"
+  echo "Building: ${spec}"
+  exit ${PIPESTATUS[0]}
+fi

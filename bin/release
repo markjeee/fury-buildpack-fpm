@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+if [ -f "$1"/pkg/*.deb ]; then
+  package=($1/pkg/*.deb)
+  package=$(basename "$package")
+else
+  exit 1
+fi
+
+cat << EOF
+---
+package: $package
+kind: deb
+EOF
