@@ -33,11 +33,10 @@ else
   buildpack_fpm_dir=$(dirname "$bin_dir")
 
   echo "Using ruby    : $(ruby -v)"
-  echo "Using rake    : $(rake -V)"
   echo "Using bundler : $(bundle -v)"
 
   cd "$buildpack_fpm_dir"
-  bundle install --deployment
+  bundle install --without development test
 
   cd "$build"
   bundle install --without development test
