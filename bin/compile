@@ -22,11 +22,22 @@ if [ -n "$BUILD_VERSION" ]; then
   BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
 fi
 
+# Prepare ourselves for installing
+
 # Let's rock and roll
 if [ "$spc_count" -gt 1 ]; then
   echo "ERROR: Multiple .gemspec files present in package root"
   exit 1
 else
-  ($(cd $(dirname $0); pwd)/support/packguy "$build" "$cache")
+  bin_dir=$(cd $(dirname $0); pwd)
+  buildpack_fpm_dir=$(dirname "$bin_dir")
+
+  cd "$buildpack_fpm_dir"
+  echo "Using ruby    : $(ruby -v)"
+  echo "Using bundler : $(bundle -v)"
+  bundle
+
+  cd "$build"
+  $bin_dir/support/packguy "$build" "$cache"
   exit ${PIPESTATUS[0]}
 fi

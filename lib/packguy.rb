@@ -16,133 +16,14 @@ class Packguy
     :architecture => 'all',
 
     :rpm_prefix => '/usr/share/ruby/vendor_ruby/',
-    :deb_prefix => '/usr/lib/ruby/vendor_ruby/'
+    :deb_prefix => '/usr/lib/ruby/vendor_ruby/',
+
+    # maybe specified, if wanting to override as set in gemspec file
+    :package_name => nil
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
   DEFAULT_LOCAL_BIN_PATH = '/usr/local/bin'
-
-  class RakeTask < ::Rake::TaskLib
-    PACKAGE_METHOD_MAP = {
-      :deb => :build_deb,
-      :rpm => :build_rpm
-    }
-
-    def self.install_tasks
-      new.define_tasks
-    end
-
-    def initialize(which = [ ])
-      @which = which
-
-      Packguy.setup
-      detect_environment
-    end
-
-    def detect_environment
-      if defined?(::RSpec)
-        unless @which.include?(:spec_with_package)
-          @which << :spec_with_package
-        end
-      end
-
-      packages = Packguy.config[:packages]
-      packages.each do |pack|
-        unless @which.include?(PACKAGE_METHOD_MAP)
-          @which << PACKAGE_METHOD_MAP[pack]
-        end
-      end
-
-      unless packages.empty?
-        @which << :build_package
-      end
-
-      @which
-    end
-
-    def define_tasks
-      @which.each do |task_name|
-        case task_name
-        when :build_package
-          desc 'Create all the packages'
-          task :build_package do
-            build_package
-          end
-        when :build_deb
-          desc 'Create a debian package'
-          task :build_deb do
-            build_deb
-          end
-        when :build_rpm
-          desc 'Create an RPM package'
-          task :build_rpm do
-            build_rpm
-          end
-        when :spec_with_package
-          desc 'Run RSpec code examples with package files'
-          task :spec_with_package do
-            spec_with_package
-          end
-        when :bundle_standalone
-          desc 'Execute bundle --standalone to download and install local copies of gems'
-          task :bundle_standalone do
-            bundle_standalone
-          end
-        else
-          # do nothing
-        end
-      end
-
-      self
-    end
-
-    def build_package
-      packages = Packguy.config[:packages]
-      packages.each do |pack|
-        build_method = PACKAGE_METHOD_MAP[pack]
-        unless build_method.nil?
-          send(build_method)
-        end
-      end
-    end
-
-    def build_deb
-      puts 'Building DEB package file...'
-      packager, pkg_path = Packguy.create_deb
-      puts 'Done creating DEB: %s' % pkg_path
-    end
-
-    def build_rpm
-      puts 'Building RPM package file...'
-      packager, pkg_path = Packguy.create_rpm
-      puts 'Done creating RPM: %s' % pkg_path
-    end
-
-    def spec_with_package
-      prefix_path = Packguy.config[:deb_prefix]
-
-      packager = Packguy.new
-      sfiles_map = packager.prepare_files(prefix_path)
-
-      ENV['PACKGUY_WORKING_PATH'] = packager.working_path
-      Rake::Task['spec'].execute
-    end
-
-    def bundle_standalone
-      root_path = File.expand_path('./')
-      bundle_spath = File.join(root_path, BUNDLE_SOURCE_PATH)
-
-      Packguy.preserve_bundler_config(root_path) do
-        if File.exists?(bundle_spath)
-          FileUtils.rm_r(bundle_spath)
-        end
-
-        cmd = 'bundle install --jobs=3 --retry=3 --force --path=%s --standalone --without=development' % bundle_spath
-        puts cmd
-        system(cmd)
-      end
-    end
-  end
 
   def self.setup
     load_packfile
@@ -325,15 +206,17 @@ class Packguy
   def gemspec
     if defined?(@spec)
       @spec
-    else
+    elsif !@gemspec_file.nil?
       @spec = Gem::Specification.load(@gemspec_file)
+    else
+      @spec = nil
     end
   end
 
   def bundle_gems
     specs = bundler_definition.specs_for([ :default ])
     gem_paths = specs.collect do |spec|
-      if spec.name != gemspec.name
+      if gemspec.nil? || spec.name != gemspec.name
         paths = [ spec.full_gem_path ]
         paths.concat(spec.full_require_paths.collect { |path| path.gsub(paths[0], '') })
       else
@@ -361,7 +244,11 @@ class Packguy
   end
 
   def package_name
-    gemspec.name
+    if @opts[:package_name].nil?
+      gemspec.name
+    else
+      @opts[:package_name]
+    end
   end
 
   def version
@@ -395,15 +282,17 @@ class Packguy
   def gather_files_for_package
     files = { }
 
-    gemspec.files.each do |fname|
-      next if File.directory?(fname)
+    unless gemspec.nil?
+      gemspec.files.each do |fname|
+        next if File.directory?(fname)
 
-      if fname =~ /^lib\/(.+)$/
-        files[fname] = fname
-      elsif fname =~ /^bin\/(.+)$/
-        files[fname] = fname
-      else
-        # ignore, other files
+        if fname =~ /^lib\/(.+)$/
+          files[fname] = fname
+        elsif fname =~ /^bin\/(.+)$/
+          files[fname] = fname
+        else
+          # ignore, other files
+        end
       end
     end
 
@@ -482,7 +371,9 @@ CODE
     FileUtils.mkpath(File.dirname(src_bin_path))
 
     bundler_setup_path = File.join(prefix_path, package_name, BUNDLE_TARGET_PATH, BUNDLE_BUNDLER_SETUP_FILE)
-    actual_bin_path = File.join(prefix_path, package_name, gemspec.bindir, binstub_fname)
+
+    bindir_name = gemspec.nil? ? 'bin' : gemspec.bindir
+    actual_bin_path = File.join(prefix_path, package_name, bindir_name, binstub_fname)
 
     File.open(src_bin_path, 'w') { |f| f.write(binstub_code % [ bundler_setup_path, actual_bin_path ]) }
     FileUtils.chmod(0755, src_bin_path)
@@ -506,7 +397,7 @@ CODE
     files = build_source_files(prefix_path)
 
     if @opts[:binstub].nil?
-      unless gemspec.executables.nil? || gemspec.executables.empty?
+      unless gemspec.nil? || gemspec.executables.nil? || gemspec.executables.empty?
         @opts[:binstub] = { }
 
         gemspec.executables.each do |exec_fname|
@@ -527,5 +418,129 @@ CODE
     files.inject([ ]) do |a, (k,v)|
       a << '%s=%s' % [ k, v ]; a
     end.join(' ')
+  end
+
+  if defined?(::Rake)
+    class RakeTask < ::Rake::TaskLib
+      PACKAGE_METHOD_MAP = {
+        :deb => :build_deb,
+        :rpm => :build_rpm
+      }
+
+      def self.install_tasks
+        new.define_tasks
+      end
+
+      def initialize(which = [ ])
+        @which = which
+
+        Packguy.setup
+        detect_environment
+      end
+
+      def detect_environment
+        if defined?(::RSpec)
+          unless @which.include?(:spec_with_package)
+            @which << :spec_with_package
+          end
+        end
+
+        packages = Packguy.config[:packages]
+        packages.each do |pack|
+          unless @which.include?(PACKAGE_METHOD_MAP)
+            @which << PACKAGE_METHOD_MAP[pack]
+          end
+        end
+
+        unless packages.empty?
+          @which << :build_package
+        end
+
+        @which
+      end
+
+      def define_tasks
+        @which.each do |task_name|
+          case task_name
+          when :build_package
+            desc 'Create all the packages'
+            task :build_package do
+              build_package
+            end
+          when :build_deb
+            desc 'Create a debian package'
+            task :build_deb do
+              build_deb
+            end
+          when :build_rpm
+            desc 'Create an RPM package'
+            task :build_rpm do
+              build_rpm
+            end
+          when :spec_with_package
+            desc 'Run RSpec code examples with package files'
+            task :spec_with_package do
+              spec_with_package
+            end
+          when :bundle_standalone
+            desc 'Execute bundle --standalone to download and install local copies of gems'
+            task :bundle_standalone do
+              bundle_standalone
+            end
+          else
+            # do nothing
+          end
+        end
+
+        self
+      end
+
+      def build_package
+        packages = Packguy.config[:packages]
+        packages.each do |pack|
+          build_method = PACKAGE_METHOD_MAP[pack]
+          unless build_method.nil?
+            send(build_method)
+          end
+        end
+      end
+
+      def build_deb
+        puts 'Building DEB package file...'
+        packager, pkg_path = Packguy.create_deb
+        puts 'Done creating DEB: %s' % pkg_path
+      end
+
+      def build_rpm
+        puts 'Building RPM package file...'
+        packager, pkg_path = Packguy.create_rpm
+        puts 'Done creating RPM: %s' % pkg_path
+      end
+
+      def spec_with_package
+        prefix_path = Packguy.config[:deb_prefix]
+
+        packager = Packguy.new
+        sfiles_map = packager.prepare_files(prefix_path)
+
+        ENV['PACKGUY_WORKING_PATH'] = packager.working_path
+        Rake::Task['spec'].execute
+      end
+
+      def bundle_standalone
+        root_path = File.expand_path('./')
+        bundle_spath = File.join(root_path, BUNDLE_SOURCE_PATH)
+
+        Packguy.preserve_bundler_config(root_path) do
+          if File.exists?(bundle_spath)
+            FileUtils.rm_r(bundle_spath)
+          end
+
+          cmd = 'bundle install --jobs=3 --retry=3 --force --path=%s --standalone --without=development' % bundle_spath
+          puts cmd
+          system(cmd)
+        end
+      end
+    end
   end
 end
