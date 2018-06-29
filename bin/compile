@@ -36,10 +36,10 @@ else
   echo "Using bundler : $(bundle -v)"
 
   cd "$buildpack_fpm_dir"
-  bundle install --without development test
+  bundle install --path vendor/bundle --without development test
 
   cd "$build"
-  bundle install --without development test
+  bundle install --path vendor/bundle --without development test
 
   $bin_dir/support/packguy "$build" "$cache"
   exit ${PIPESTATUS[0]}
