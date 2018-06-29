@@ -44,9 +44,11 @@ fi
 # Will be converted into a ENV var later.
 export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
 
-echo "Bundling repo in $build..."
-cd "$build"
-bundle install --path vendor/bundle --without development test
+if [ ! -f "$BUNDLE_GEMFILE.lock" ]; then
+  echo "Bundling repo in $build..."
+  cd "$build"
+  bundle install --path vendor/bundle --without development test
+fi
 
 $bin_dir/support/packguy "$build" "$cache"
 exit ${PIPESTATUS[0]}
