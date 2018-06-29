@@ -40,6 +40,10 @@ if [ -z "$fpm_path" ]; then
   fi
 fi
 
+# This is a temporary fix, since no way to know the current Gemfile do not work on ruby-19.
+# Will be converted into a ENV var later.
+export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
+
 echo "Bundling repo in $build..."
 cd "$build"
 bundle install --path vendor/bundle --without development test
