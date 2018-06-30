@@ -15,21 +15,24 @@ else
   spc_count=0
 fi
 
-if [ -n "$BUILD_VERSION" ]; then
-  BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
-fi
-
 if [ "$spc_count" -gt 1 ]; then
   echo "ERROR: Multiple .gemspec files present in package root"
   exit 1
 fi
 
+if [ -n "$BUILD_VERSION" ]; then
+  BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
+
+  export BUILD_VERSION
+  echo "BUILD_VERSION   : $BUILD_VERSION"
+fi
+
 bin_dir=$(cd $(dirname $0); pwd)
 buildpack_fpm_dir=$(dirname "$bin_dir")
 
-echo "Build pack dir : $buildpack_fpm_dir"
-echo "Using ruby     : $(ruby -v)"
-echo "Using bundler  : $(bundle -v)"
+echo "Build pack dir   : $buildpack_fpm_dir"
+echo "Using ruby       : $(ruby -v)"
+echo "Using bundler    : $(bundle -v)"
 
 fpm_path=$(which fpm)
 if [ -z "$fpm_path" ]; then
@@ -38,16 +41,16 @@ if [ -z "$fpm_path" ]; then
     cd "$buildpack_fpm_dir" && bundle install --path vendor/bundle --without development test
   fi
 
-  echo "Using fpm      : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
+  echo "Using fpm        : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
 else
-  echo "Using fpm      : $(fpm -v)"
+  echo "Using fpm        : $(fpm -v)"
 fi
 
 # This is a temporary fix, since no way to know the current Gemfile do not work on ruby-19.
 # Will be converted into a ENV var later.
 export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
 
-echo "Using Gemfile  : $BUNDLE_GEMFILE"
+echo "Using Gemfile    : $BUNDLE_GEMFILE"
 echo "Bundling repo in $build..."
 cd "$build" && bundle install --path vendor/bundle --without development test
 
