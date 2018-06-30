@@ -8,7 +8,35 @@ export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 build=$(cd "$1"; pwd); cache=$(cd "$2"; pwd)
+bin_dir=$(cd $(dirname $0); pwd)
+buildpack_fpm_dir=$(dirname "$bin_dir")
 
+if [ -n "$BUILD_VERSION" ]; then
+  export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
+  echo "BUILD_VERSION    : $BUILD_VERSION"
+fi
+
+echo "Build pack dir   : $buildpack_fpm_dir"
+echo "Using ruby       : $(ruby -v)"
+echo "Using bundler    : $(bundle -v)"
+
+fpm_path=$(which fpm)
+if [ -z "$fpm_path" ]; then
+  if [ ! -f "$buildpack_fpm_dir/.bundle/config" ]; then
+    echo "Bundling fury-buildpack-fpm to install fpm executable..."
+    cd "$buildpack_fpm_dir" && env bundle install --path vendor/bundle --without development test
+  fi
+
+  echo "Using fpm        : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
+else
+  echo "Using fpm        : $(fpm -v)"
+fi
+
+if [ -f "$build/.env.fury-buildpack-fpm" ]; then
+  source "$build/.env.fury-buildpack-fpm"
+fi
+
+# == BEGIN Rubygems specific ==
 if [ -n "$build" ]; then
   spc_count=$(find "$build" -maxdepth 1 -name '*.gemspec' | wc -l)
 else
@@ -20,39 +48,23 @@ if [ "$spc_count" -gt 1 ]; then
   exit 1
 fi
 
-if [ -n "$BUILD_VERSION" ]; then
-  BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
-
-  export BUILD_VERSION
-  echo "BUILD_VERSION   : $BUILD_VERSION"
+if [ -z "$BUNDLE_GEMFILE" ]; then
+  export BUNDLE_GEMFILE=$build/Gemfile
 fi
 
-bin_dir=$(cd $(dirname $0); pwd)
-buildpack_fpm_dir=$(dirname "$bin_dir")
-
-echo "Build pack dir   : $buildpack_fpm_dir"
-echo "Using ruby       : $(ruby -v)"
-echo "Using bundler    : $(bundle -v)"
-
-fpm_path=$(which fpm)
-if [ -z "$fpm_path" ]; then
-  if [ ! -f "$buildpack_fpm_dir/.bundle/config" ]; then
-    echo "Bundling fury-buildpack-fpm to install fpm executable..."
-    cd "$buildpack_fpm_dir" && bundle install --path vendor/bundle --without development test
-  fi
-
-  echo "Using fpm        : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
+if [ -f "$BUNDLE_GEMFILE" ]; then
+  echo "Using Gemfile    : $BUNDLE_GEMFILE"
 else
-  echo "Using fpm        : $(fpm -v)"
+  echo "ERROR: A gemfile could not be found"
+  exit 1
 fi
 
-# This is a temporary fix, since no way to know the current Gemfile do not work on ruby-19.
-# Will be converted into a ENV var later.
-export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
+echo "=================="
+echo ""
 
-echo "Using Gemfile    : $BUNDLE_GEMFILE"
 echo "Bundling repo in $build..."
 cd "$build" && bundle install --path vendor/bundle --without development test
+# == END Rubygems specific ==
 
 cd "$build" && $bin_dir/support/packguy "$build" "$cache"
 exit ${PIPESTATUS[0]}

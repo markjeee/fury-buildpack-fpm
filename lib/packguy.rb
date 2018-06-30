@@ -38,7 +38,7 @@ class Packguy
   end
 
   def self.setup_defaults
-    if ENV.include?('PACKGUY_PACKAGES')
+    if ENV.include?('PACKGUY_PACKAGES') && !ENV['PACKGUY_PACKAGES'].empty?
       config[:packages] = ENV['PACKGUY_PACKAGES'].split(',').collect { |p| p.to_sym }
     elsif config[:packages].nil?
       config[:packages] = DEFAULT_PACKAGES
@@ -257,7 +257,7 @@ class Packguy
 
   def working_path
     if @opts[:working_path].nil?
-      File.join(root_path, 'tmp/packager_wp')
+      File.join(root_path, 'tmp/packguy_wp')
     else
       @opts[:working_path]
     end
