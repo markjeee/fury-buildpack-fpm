@@ -124,7 +124,7 @@ class Packguy
     packages.each do |pack|
       build_method = PACKAGE_METHOD_MAP[pack]
       unless build_method.nil?
-        send(build_method)
+        send(build_method, opts)
       end
     end
   end

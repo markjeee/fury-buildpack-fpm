@@ -1,6 +1,6 @@
 source 'http://rubygems.org'
 
-gem 'rake'
+gem 'rake', '~> 12.2'
 gem 'fpm'
 
 group :development do
