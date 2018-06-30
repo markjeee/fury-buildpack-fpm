@@ -205,17 +205,23 @@ class Packguy
     else
       @gemspec_file = @opts[:gemspec]
     end
+
+    puts @opts.inspect
   end
 
   def find_default_gemspec_file
     files = [ ]
+    try_paths = [ ]
 
-    gemfile_dirpath = @gemfile.untaint.expand_path.parent
-    files = Dir.glob(File.join(gemfile_dirpath, '{,*}.gemspec'))
-    if files.empty?
-      files = Dir.glob(File.join(@opts[:path] || Dir.pwd, '{,*}.gemspec'))
+    try_paths << @gemfile.untaint.expand_path.parent.to_s
+    try_paths << (@opts[:path] || Dir.pwd)
+
+    try_paths.detect do |tpath|
+      files.concat(Dir.glob(File.join(tpath, '{,*}.gemspec')))
+      files.count > 0
     end
 
+    puts 'Tried paths at: %s' % try_paths.inspect
     puts 'Found gemspec on: %s' % files.inspect
 
     unless files.empty?

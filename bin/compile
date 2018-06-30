@@ -35,21 +35,21 @@ fpm_path=$(which fpm)
 if [ -z "$fpm_path" ]; then
   if [ ! -f "$buildpack_fpm_dir/.bundle/config" ]; then
     echo "Bundling fury-buildpack-fpm to install fpm executable..."
-    cd "$buildpack_fpm_dir"
-    bundle install --path vendor/bundle --without development test
+    cd "$buildpack_fpm_dir" && bundle install --path vendor/bundle --without development test
   fi
+
+  echo "Using fpm      : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
+else
+  echo "Using fpm      : $(fpm -v)"
 fi
 
 # This is a temporary fix, since no way to know the current Gemfile do not work on ruby-19.
 # Will be converted into a ENV var later.
 export BUNDLE_GEMFILE=$build/spec/gemfiles/Gemfile.19
 
-echo "Using Gemfile $BUNDLE_GEMFILE"
-if [ ! -f "$BUNDLE_GEMFILE.lock" ]; then
-  echo "Bundling repo in $build..."
-  cd "$build"
-  bundle install --path vendor/bundle --without development test
-fi
+echo "Using Gemfile  : $BUNDLE_GEMFILE"
+echo "Bundling repo in $build..."
+cd "$build" && bundle install --path vendor/bundle --without development test
 
-$bin_dir/support/packguy "$build" "$cache"
+cd "$build" && $bin_dir/support/packguy "$build" "$cache"
 exit ${PIPESTATUS[0]}
