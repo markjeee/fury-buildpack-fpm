@@ -11,6 +11,16 @@ build=$(cd "$1"; pwd); cache=$(cd "$2"; pwd)
 bin_dir=$(cd $(dirname $0); pwd)
 buildpack_fpm_dir=$(dirname "$bin_dir")
 
+# == UNPACK bundled fpm gem ==
+vendor_buildpack_cache_dir=$buildpack_fpm_dir/vendor/buildpack-cache
+vendor_buildpack_cache_file=$(ruby -e "puts 'bundle_%s_%s_%s.tar.gz' % [ defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby', RbConfig::CONFIG['ruby_version'], RbConfig::CONFIG['arch'] ]")
+
+if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
+  mkdir -p $buildpack_fpm_dir/bundle
+  cd $buildpack_fpm_dir/bundle; tar -xzpf $vendor_buildpack_cache_dir/$vendor_buildpack_cache_file
+fi
+# == END bundled fpm gem ==
+
 if [ -n "$BUILD_VERSION" ]; then
   export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
   echo "BUILD_VERSION    : $BUILD_VERSION"
@@ -19,18 +29,8 @@ fi
 echo "Build pack dir   : $buildpack_fpm_dir"
 echo "Using ruby       : $(ruby -v)"
 echo "Using bundler    : $(bundle -v)"
-
-fpm_path=$(which fpm)
-if [ -z "$fpm_path" ]; then
-  if [ ! -f "$buildpack_fpm_dir/.bundle/config" ]; then
-    echo "Bundling fury-buildpack-fpm to install fpm executable..."
-    cd "$buildpack_fpm_dir" && env bundle install --path vendor/bundle --without development test
-  fi
-
-  echo "Using fpm        : $(cd $buildpack_fpm_dir && bundle exec fpm -v)"
-else
-  echo "Using fpm        : $(fpm -v)"
-fi
+echo "Using fpm cache  : $vendor_buildpack_cache_file"
+echo "Using fpm        : $($bin_dir/support/fpm -v)"
 
 if [ -f "$build/.env.fury-buildpack-fpm" ]; then
   source "$build/.env.fury-buildpack-fpm"
@@ -50,12 +50,14 @@ fi
 
 if [ -z "$BUNDLE_GEMFILE" ]; then
   export BUNDLE_GEMFILE=$build/Gemfile
+else
+  eval "export BUNDLE_GEMFILE=$BUNDLE_GEMFILE"
 fi
 
 if [ -f "$BUNDLE_GEMFILE" ]; then
   echo "Using Gemfile    : $BUNDLE_GEMFILE"
 else
-  echo "ERROR: A gemfile could not be found"
+  echo "ERROR: A gemfile could not be found (BUNDLE_GEMFILE = $BUNDLE_GEMFILE)"
   exit 1
 fi
 

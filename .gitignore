@@ -2,3 +2,7 @@
 .bundle/config
 vendor/bundle
 Gemfile.lock
+/bundle
+config.tmp
+/vendor/cache
+/bundle_tarball

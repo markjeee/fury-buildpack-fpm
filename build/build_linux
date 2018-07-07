@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+gem update --system
+gem install bundler
+
+export PATH=$PATH:/usr/local/bundle/bin
+
+echo "Using ruby       : $(ruby -v)"
+echo "Using gem        : $(gem -v)"
+echo "Using bundler    : $(bundle -v)"
+
+cd /build
+bundle config ssl_ca_cert /etc/ssl/certs/ca-certificates.crt
+bundle
+rake bundle_standalone_tarball

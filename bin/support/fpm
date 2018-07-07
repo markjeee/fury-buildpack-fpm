@@ -1,20 +1,13 @@
 #!/usr/bin/env bash
 
-fpm_path=$(which fpm)
 buildpack_fpm_dir=$(cd "$(dirname $0)/../../"; pwd)
-fpm_vendor_path=$buildpack_fpm_dir/vendor/fury-buildpack-fpm
+fpm_vendor_path=$buildpack_fpm_dir/bundle
 
-if [ -n "$fpm_path" ]; then
-  fpm_ruby="$fpm_path"
-elif [ -d "$fpm_vendor_path" ]; then
-  echo "Executing vendor fpm from: $fpm_vendor_path"
-
+if [ -d "$fpm_vendor_path" ]; then
   export FURY_BUILDPACK_FPM_VENDOR="$fpm_vendor_path"
   fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
 else
   buildpack_fpm_dir=$(cd "$(dirname $0)/../.."; pwd)
-  echo "Executing bundle fpm from: $buildpack_fpm_dir"
-
   export BUNDLE_GEMFILE="$buildpack_fpm_dir/Gemfile"
   fpm_ruby="bundle exec fpm"
 fi
