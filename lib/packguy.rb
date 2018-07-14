@@ -209,10 +209,31 @@ class Packguy
     if defined?(@bundle_def)
       @bundle_def
     else
-      ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
+      if ENV['BUNDLE_GEMFILE'].nil?
+        ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
+      end
 
-      ::Bundler.setup(:default)
+      if File.exists?(bundle_working_path)
+        FileUtils.rm_r(bundle_working_path)
+      end
+
+      install_opts = { }
+      install_opts[:without] = [ :development, :test ]
+      install_opts[:path] = bundle_working_path
+      install_opts[:redownload] = true
+      install_opts[:retry] = 3
+      install_opts[:jobs] = 3
+
+      Bundler.ui = Bundler::UI::Shell.new
+      Bundler.ui.info 'Bundling with: %s' % File.expand_path(ENV['BUNDLE_GEMFILE'])
+
+      Bundler.settings.temporary(install_opts)
+
       @bundle_def = ::Bundler.definition
+      @bundle_def.validate_runtime!
+      Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
+
+      @bundle_def
     end
   end
 
@@ -232,6 +253,10 @@ class Packguy
 
   def pkg_path
     File.join(root_path, 'pkg')
+  end
+
+  def bundle_working_path
+    File.join(root_path, 'tmp/bundle_wp')
   end
 
   def working_path

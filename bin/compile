@@ -61,11 +61,15 @@ else
   exit 1
 fi
 
+if ls "$build"/*.gemspec &> /dev/null; then
+  gemspec_file=$(basename $(ls "$build"/*.gemspec | head -n 1))
+  echo "Gemspec file     : $gemspec_file"
+else
+  echo "ERROR: Found no gemspec, compile not supported." && exit 1
+fi
+
 echo "=================="
 echo ""
-
-echo "Bundling repo in $build..."
-cd "$build" && bundle install --path vendor/bundle --without development test
 # == END Rubygems specific ==
 
 cd "$build" && $bin_dir/support/packguy "$build" "$cache"
