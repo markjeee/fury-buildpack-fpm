@@ -218,7 +218,8 @@ class Packguy
       end
 
       install_opts = { }
-      install_opts[:without] = [ :development, :test ]
+      install_opts[:with] = [ :default ]
+      install_opts[:without] = [ :development, :test, :documentation ]
       install_opts[:path] = bundle_working_path
       install_opts[:redownload] = true
       install_opts[:retry] = 3
@@ -311,19 +312,30 @@ class Packguy
   end
 
   def bundle_gems
+    bgems = { }
     specs = bundler_definition.specs_for([ :default ])
-    gem_paths = specs.collect do |spec|
-      if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
-        paths = [ spec.full_gem_path ]
-        paths.concat(spec.full_require_paths.collect { |path| path.include?(paths[0]) ? path.gsub(paths[0], '') : nil })
-        paths
-      else
-        nil
-      end
-    end.compact
 
-    bgems = gem_paths.inject({ }) do |h, a|
-      h[File.basename(a.first)] = a; h
+    specs.each do |spec|
+      if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
+        if spec.is_a?(Bundler::EndpointSpecification)
+          rs = spec.instance_variable_get(:@remote_specification)
+          if rs
+            spec = rs
+          elsif spec._local_specification
+            spec = spec._local_specification
+          end
+        end
+
+        bhash = { }
+
+        bhash[:spec] = spec
+        bhash[:gem_path] = spec.full_gem_path
+        bhash[:files] = spec.files - spec.test_files
+        bhash[:require_paths] = spec.full_require_paths.collect { |path| path.include?(bhash[:gem_path]) ?
+                                                                    path.gsub(bhash[:gem_path], '') : nil }.compact
+
+        bgems[spec.name] = bhash
+      end
     end
 
     bgems
@@ -347,9 +359,11 @@ class Packguy
     end
 
     bgems = bundle_gems
-    bgems.each do |gem_name, src_paths|
-      src_path = src_paths.first
-      files[src_path] = File.join(BUNDLE_TARGET_PATH, gem_name)
+    bgems.each do |gem_name, bhash|
+      bhash[:files].each do |file|
+        src_full_path = File.join(bhash[:gem_path], file)
+        files[src_full_path] = File.join(BUNDLE_TARGET_PATH, gem_name, file)
+      end
     end
 
     files
@@ -363,9 +377,10 @@ class Packguy
 
     bgems = bundle_gems
     File.open(bundle_setup_path, 'w') do |f|
-      bgems.each do |gem_name, src_paths|
-        if src_paths.count > 1
-          rpaths = src_paths[1..-1]
+      bgems.each do |gem_name, bhash|
+        src_paths = bhash[:require_paths]
+        if src_paths.count > 0
+          rpaths = src_paths.dup
         else
           rpaths = [ '/lib' ]
         end
