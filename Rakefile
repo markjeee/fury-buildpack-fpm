@@ -38,9 +38,9 @@ task :bundle_standalone_tarball do
   puts 'Created bundle cache file: %s' % tarball_path
 end
 
-task :build_linux do
+task :bundle_for_linux do
   ENV['EXEC'] = '/build/build/build_linux'
   Rake::Task['docker:runi'].invoke
 end
 
-task :build_local => [ :bundle_standalone ]
+task :bundle_for_local => [ :bundle_standalone ]

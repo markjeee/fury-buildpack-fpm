@@ -4,6 +4,7 @@ require 'fileutils'
 class Packguy
   module RakeTools
     BUNDLE_SOURCE_PATH = 'bundle'
+    VENDORIZED_FPM_PATH = File.expand_path('../../../bin/support/vendorized_fpm', __FILE__)
 
     def self.preserve_bundler_config(root_path)
       bundle_config = File.join(root_path, '.bundle/config')
@@ -33,15 +34,9 @@ class Packguy
         bundle_spath = File.join(root_path, BUNDLE_SOURCE_PATH)
       end
 
-      preserve_bundler_config(root_path) do
-        if File.exists?(bundle_spath)
-          FileUtils.rm_r(bundle_spath)
-        end
-
-        cmd = 'bundle install --path=%s --standalone --without=development' % bundle_spath
-        puts cmd
-        system(cmd)
-      end
+      cmd = '%s %s %s' % [ VENDORIZED_FPM_PATH, root_path, bundle_spath ]
+      puts cmd
+      Bundler.clean_system(cmd)
 
       bundle_spath
     end
