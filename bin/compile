@@ -16,56 +16,55 @@ vendor_buildpack_cache_dir=$buildpack_fpm_dir/vendor/buildpack-cache
 vendor_buildpack_cache_file=$(ruby -e "puts 'bundle_%s_%s_%s.tar.gz' % [ defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby', RbConfig::CONFIG['ruby_version'], RbConfig::CONFIG['arch'] ]")
 
 if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
-  mkdir -p $buildpack_fpm_dir/bundle
-  cd $buildpack_fpm_dir/bundle; tar -xzpf $vendor_buildpack_cache_dir/$vendor_buildpack_cache_file
+    mkdir -p $buildpack_fpm_dir/bundle
+    cd $buildpack_fpm_dir/bundle; tar -xzpf $vendor_buildpack_cache_dir/$vendor_buildpack_cache_file
 fi
 # == END bundled fpm gem ==
 
 if [ -n "$BUILD_VERSION" ]; then
-  export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
-  echo "BUILD_VERSION    : $BUILD_VERSION"
+    export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
+    echo "BUILD_VERSION    : $BUILD_VERSION"
 fi
 
 echo "Build pack dir   : $buildpack_fpm_dir"
 echo "Using ruby       : $(ruby -v)"
 echo "Using bundler    : $(bundle -v)"
-echo "Using fpm cache  : $vendor_buildpack_cache_file"
+if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
+    echo "Using fpm cache  : $vendor_buildpack_cache_file"
+fi
 echo "Using fpm        : $($bin_dir/support/fpm -v)"
 
 if [ -f "$build/.env.fury-buildpack-fpm" ]; then
-  source "$build/.env.fury-buildpack-fpm"
+    source "$build/.env.fury-buildpack-fpm"
 fi
 
 # == BEGIN Rubygems specific ==
 if [ -n "$build" ]; then
-  spc_count=$(find "$build" -maxdepth 1 -name '*.gemspec' | wc -l)
+    spc_count=$(find "$build" -maxdepth 1 -name '*.gemspec' | wc -l)
 else
-  spc_count=0
+    spc_count=0
 fi
 
 if [ "$spc_count" -gt 1 ]; then
-  echo "ERROR: Multiple .gemspec files present in package root"
-  exit 1
+    echo "ERROR: Multiple .gemspec files present in package root"
+    exit 1
 fi
 
-if [ -z "$BUNDLE_GEMFILE" ]; then
-  export BUNDLE_GEMFILE=$build/Gemfile
-else
-  eval "export BUNDLE_GEMFILE=$BUNDLE_GEMFILE"
+if [ -n "$BUNDLE_GEMFILE" ]; then
+    eval "export BUNDLE_GEMFILE=$BUNDLE_GEMFILE"
 fi
 
 if [ -f "$BUNDLE_GEMFILE" ]; then
-  echo "Using Gemfile    : $BUNDLE_GEMFILE"
+    echo "Using Gemfile    : $BUNDLE_GEMFILE"
 else
-  echo "ERROR: A gemfile could not be found (BUNDLE_GEMFILE = $BUNDLE_GEMFILE)"
-  exit 1
+    unset BUNDLE_GEMFILE
 fi
 
 if ls "$build"/*.gemspec &> /dev/null; then
-  gemspec_file=$(basename $(ls "$build"/*.gemspec | head -n 1))
-  echo "Gemspec file     : $gemspec_file"
+    gemspec_file=$(basename $(ls "$build"/*.gemspec | head -n 1))
+    echo "Gemspec file     : $gemspec_file"
 else
-  echo "ERROR: Found no gemspec, compile not supported." && exit 1
+    echo "ERROR: Found no gemspec, compile not supported." && exit 1
 fi
 
 echo "=================="

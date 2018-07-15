@@ -173,8 +173,10 @@ class Packguy
   def initialize(opts = { })
     @opts = self.class.config.merge(opts)
 
-    if @opts[:gemfile].nil?
+    if !ENV['BUNDLE_GEMFILE'].nil?
       @gemfile = Bundler::SharedHelpers.default_gemfile
+    elsif @opts[:gemfile].nil?
+      @gemfile = autogenerate_clean_gemfile
     else
       @gemfile = Pathname.new(@opts[:gemfile])
     end
@@ -191,7 +193,7 @@ class Packguy
     try_paths = [ ]
 
     try_paths << @gemfile.untaint.expand_path.parent.to_s
-    try_paths << (@opts[:path] || Dir.pwd)
+    try_paths << root_path
 
     try_paths.detect do |tpath|
       files.concat(Dir.glob(File.join(tpath, '{,*}.gemspec')))
@@ -248,16 +250,30 @@ class Packguy
     end
   end
 
+  def autogenerate_clean_gemfile
+    FileUtils.mkpath(working_path)
+
+    gemfile_path = File.join(working_path, 'Gemfile')
+    File.open(gemfile_path, 'w') do |f|
+      f.write <<GEMFILE
+source "http://rubygems.org"
+gemspec :path => '../../'
+GEMFILE
+    end
+
+    Pathname.new(gemfile_path)
+  end
+
   def root_path
-    File.expand_path('./')
+    if @opts[:path].nil?
+      File.expand_path('./')
+    else
+      @opts[:path]
+    end
   end
 
   def pkg_path
     File.join(root_path, 'pkg')
-  end
-
-  def bundle_working_path
-    File.join(root_path, 'tmp/bundle_wp')
   end
 
   def working_path
@@ -266,6 +282,14 @@ class Packguy
     else
       @opts[:working_path]
     end
+  end
+
+  def bundle_working_path
+    File.join(working_path, 'bundle')
+  end
+
+  def package_working_path
+    File.join(working_path, 'package')
   end
 
   def package_name
@@ -371,13 +395,19 @@ class Packguy
 
   def create_bundle_setup_rb
     bundle_setup_file = File.join(BUNDLE_TARGET_PATH, BUNDLE_BUNDLER_SETUP_FILE)
-    bundle_setup_path = File.join(working_path, package_name, bundle_setup_file)
+    bundle_setup_path = File.join(package_working_path, package_name, bundle_setup_file)
 
     FileUtils.mkpath(File.dirname(bundle_setup_path))
 
     bgems = bundle_gems
     File.open(bundle_setup_path, 'w') do |f|
+      f.puts '# Adding require paths to load path (empty if no gems is needed)'
+      f.puts ''
+
       bgems.each do |gem_name, bhash|
+        spec = bhash[:spec]
+        f.puts '# == Gem: %s, version: %s' % [ spec.name, spec.version ]
+
         src_paths = bhash[:require_paths]
         if src_paths.count > 0
           rpaths = src_paths.dup
@@ -396,7 +426,7 @@ class Packguy
   end
 
   def gather_files
-    prefix_path = File.join(working_path, package_name)
+    prefix_path = File.join(package_working_path, package_name)
 
     if File.exists?(prefix_path)
       FileUtils.rm_r(prefix_path)
@@ -432,7 +462,7 @@ require "%s"
 load "%s"
 CODE
 
-    src_bin_path = File.join(working_path, 'bin', binstub_fname)
+    src_bin_path = File.join(package_working_path, 'bin', binstub_fname)
     FileUtils.mkpath(File.dirname(src_bin_path))
 
     bundler_setup_path = File.join(prefix_path, package_name, BUNDLE_TARGET_PATH, BUNDLE_BUNDLER_SETUP_FILE)
@@ -449,7 +479,7 @@ CODE
   def build_source_files(prefix_path)
     files = { }
 
-    source_path = File.join(working_path, package_name, '/')
+    source_path = File.join(package_working_path, package_name, '/')
     target_path = File.join(prefix_path, package_name)
     files[source_path] = target_path
 
