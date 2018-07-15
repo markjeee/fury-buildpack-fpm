@@ -39,7 +39,7 @@ task :bundle_standalone_tarball do
 end
 
 task :bundle_for_linux do
-  ENV['EXEC'] = '/build/build/build_linux'
+  ENV['EXEC'] = '/build/exec/build_linux'
   Rake::Task['docker:runi'].invoke
 end
 

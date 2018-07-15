@@ -6,6 +6,7 @@ class Packguy
   autoload :RakeTask, File.expand_path('../packguy/rake_task', __FILE__)
 
   BUNDLE_TARGET_PATH = 'bundle'
+  BUNDLE_EXTENSIONS_PATH = 'extensions'
   BUNDLE_BUNDLER_SETUP_FILE = 'bundler/setup.rb'
 
   PACKGUY_PACKFILE = 'Packfile'
@@ -246,8 +247,6 @@ class Packguy
         next unless spec.source.is_a?(Bundler::Source::Rubygems)
 
         cached_gem = spec.source.send(:cached_gem, spec)
-        #package = Gem::Package.new(cached_gem)
-        #package.extract_files(spec.full_gem_path)
 
         installer = Gem::Installer.at(cached_gem, :path => rubygems_dir)
         installer.extract_files
@@ -402,9 +401,8 @@ GEMFILE
         files[src_full_path] = File.join(BUNDLE_TARGET_PATH, gem_name, file)
       end
 
-      gemspec_path = bhash[:files].detect { |f| f =~ /^.+\.gemspec$/ }
-      if gemspec_path.nil?
-        files[bhash[:orig_spec].loaded_from] = File.join(BUNDLE_TARGET_PATH, gem_name, '%s.gemspec' % gem_name)
+      unless bhash[:spec].extensions.empty?
+        files[bhash[:orig_spec].loaded_from] = File.join(BUNDLE_EXTENSIONS_PATH, '%s.gemspec' % gem_name)
       end
     end
 
