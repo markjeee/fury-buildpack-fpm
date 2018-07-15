@@ -234,7 +234,19 @@ class Packguy
 
       @bundle_def = ::Bundler.definition
       @bundle_def.validate_runtime!
-      Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
+      @bundle_def.resolve_remotely!
+
+      Bundler.settings.temporary(:no_install => true) do
+        Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
+      end
+
+      @bundle_def.specs.each do |spec|
+        next unless spec.source.is_a?(Bundler::Source::Rubygems)
+
+        cached_gem = spec.source.send(:cached_gem, spec)
+        package = Gem::Package.new(cached_gem)
+        package.extract_files(spec.full_gem_path)
+      end
 
       @bundle_def
     end
