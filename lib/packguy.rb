@@ -234,18 +234,24 @@ class Packguy
 
       @bundle_def = ::Bundler.definition
       @bundle_def.validate_runtime!
-      @bundle_def.resolve_remotely!
 
       Bundler.settings.temporary(:no_install => true) do
         Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
       end
 
+      rubygems_dir = Bundler.rubygems.gem_dir
+      FileUtils.mkpath(File.join(rubygems_dir, 'specifications'))
+
       @bundle_def.specs.each do |spec|
         next unless spec.source.is_a?(Bundler::Source::Rubygems)
 
         cached_gem = spec.source.send(:cached_gem, spec)
-        package = Gem::Package.new(cached_gem)
-        package.extract_files(spec.full_gem_path)
+        #package = Gem::Package.new(cached_gem)
+        #package.extract_files(spec.full_gem_path)
+
+        installer = Gem::Installer.at(cached_gem, :path => rubygems_dir)
+        installer.extract_files
+        installer.write_spec
       end
 
       @bundle_def
@@ -353,6 +359,7 @@ GEMFILE
 
     specs.each do |spec|
       if spec.name != 'bundler' && (gemspec.nil? || spec.name != gemspec.name)
+        orig_spec = spec
         if spec.is_a?(Bundler::EndpointSpecification)
           rs = spec.instance_variable_get(:@remote_specification)
           if rs
@@ -364,6 +371,7 @@ GEMFILE
 
         bhash = { }
 
+        bhash[:orig_spec] = orig_spec
         bhash[:spec] = spec
         bhash[:gem_path] = spec.full_gem_path
         bhash[:files] = spec.files - spec.test_files
@@ -381,16 +389,9 @@ GEMFILE
     files = { }
 
     unless gemspec.nil?
-      gemspec.files.each do |fname|
+      (gemspec.files - gemspec.test_files).each do |fname|
         next if File.directory?(fname)
-
-        if fname =~ /^lib\/(.+)$/
-          files[fname] = fname
-        elsif fname =~ /^bin\/(.+)$/
-          files[fname] = fname
-        else
-          # ignore, other files
-        end
+        files[fname] = fname
       end
     end
 
@@ -399,6 +400,11 @@ GEMFILE
       bhash[:files].each do |file|
         src_full_path = File.join(bhash[:gem_path], file)
         files[src_full_path] = File.join(BUNDLE_TARGET_PATH, gem_name, file)
+      end
+
+      gemspec_path = bhash[:files].detect { |f| f =~ /^.+\.gemspec$/ }
+      if gemspec_path.nil?
+        files[bhash[:orig_spec].loaded_from] = File.join(BUNDLE_TARGET_PATH, gem_name, '%s.gemspec' % gem_name)
       end
     end
 
