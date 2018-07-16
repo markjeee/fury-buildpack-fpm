@@ -6,33 +6,32 @@ require 'fileutils'
 
 bundle_path = ARGV[0]
 if bundle_path.nil? || bundle_path.empty?
-  abort 'Please specify a bundle path'
+  abort 'ERROR: Please specify a bundle path'
 else
   bundle_path = File.expand_path(bundle_path)
 end
 
 gemspec_path = ARGV[1]
 if gemspec_path.nil? || gemspec_path.empty?
-  abort 'Please specify a gemspec path'
+  abort 'ERROR: Please specify a gemspec path'
 else
   gemspec_path = File.expand_path(gemspec_path)
 end
 
-puts 'Bundle path: %s' % bundle_path
-puts 'Gemspec path: %s' % gemspec_path
+puts 'Bundle path   : %s' % bundle_path
+puts 'Gemspec path  : %s' % gemspec_path
 
 spec = eval(File.read(gemspec_path)).tap do |spec|
   spec.loaded_from = gemspec_path
 end
 
 gem_path = File.join(bundle_path, spec.name)
-puts 'Gem path: %s' % gem_path
+puts 'Gem path      : %s' % gem_path
 spec.full_gem_path = gem_path
 
 unless spec.extensions.empty?
-  puts 'Building extensions...'
   builder = Gem::Ext::Builder.new(spec)
   builder.build_extensions
 else
-  puts 'No extensions found, nothing to do'
+  warn 'WARN: No extensions found, nothing to do'
 end

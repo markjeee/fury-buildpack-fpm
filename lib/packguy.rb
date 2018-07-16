@@ -374,8 +374,11 @@ GEMFILE
         bhash[:spec] = spec
         bhash[:gem_path] = spec.full_gem_path
         bhash[:files] = spec.files - spec.test_files
-        bhash[:require_paths] = spec.full_require_paths.collect { |path| path.include?(bhash[:gem_path]) ?
-                                                                    path.gsub(bhash[:gem_path], '') : nil }.compact
+
+        bhash[:require_paths] = spec.full_require_paths.collect { |path|
+          path.include?(bhash[:gem_path]) ?
+            path.gsub(bhash[:gem_path], '') : nil
+        }.compact
 
         bgems[spec.name] = bhash
       end
