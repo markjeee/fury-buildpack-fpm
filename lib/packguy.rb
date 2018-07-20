@@ -25,7 +25,9 @@ class Packguy
 
     # maybe specified, if wanting to override as set in gemspec file
     :package_name => nil,
-    :working_path => nil
+    :working_path => nil,
+
+    :dependencies => { }
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -47,6 +49,8 @@ class Packguy
     elsif config[:packages].nil?
       config[:packages] = DEFAULT_PACKAGES
     end
+
+    config[:dependencies] = { 'ruby' => nil }
   end
 
   def self.load_packfile
@@ -116,12 +120,13 @@ class Packguy
     prefix_path = config[:deb_prefix]
     sfiles_map = packager.prepare_files(prefix_path)
     template_values = packager.template_values(prefix_path)
+    package_deps = packager.package_dependencies
 
     deb_package_file = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, deb_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s --template-scripts %s %s' %
+    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s --after-install %s --template-scripts %s %s %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -133,6 +138,7 @@ class Packguy
             packager.author,
             pkg_file,
             packager.after_install_script,
+            package_deps,
             template_values,
             sfiles_map ]
 
@@ -148,12 +154,13 @@ class Packguy
     prefix_path = config[:rpm_prefix]
     sfiles_map = packager.prepare_files(prefix_path)
     template_values = packager.template_values(prefix_path)
+    package_deps = packager.package_dependencies
 
     rpm_package_file = '%s_%s_%s.rpm' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, rpm_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s --template-scripts %s' %
+    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s --after-install %s --template-scripts %s %s %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -165,6 +172,7 @@ class Packguy
             packager.author,
             pkg_file,
             packager.after_install_script,
+            package_deps,
             template_values,
             sfiles_map ]
 
@@ -398,6 +406,11 @@ GEMFILE
     bgems
   end
 
+  def add_ruby_build_dependencies!
+    @opts[:dependencies]['ruby-dev'] = nil
+    @opts[:dependencies]['ruby-build'] = nil
+  end
+
   def gather_files_for_package
     files = { }
 
@@ -416,6 +429,8 @@ GEMFILE
       end
 
       unless bhash[:spec].extensions.empty?
+        add_ruby_build_dependencies!
+
         files[bhash[:orig_spec].loaded_from] = File.join(BUNDLE_EXTENSIONS_PATH, '%s.gemspec' % gem_name)
       end
     end
@@ -548,6 +563,16 @@ CODE
     end unless @opts[:binstub].nil?
 
     source_files_map(files)
+  end
+
+  def package_dependencies
+    @opts[:dependencies].collect do |k, v|
+      if v.nil?
+        '-d %s' % k
+      else
+        '-d "%s %s"' % [ k, v ]
+      end
+    end.join(' ')
   end
 
   def template_values(prefix_path)
