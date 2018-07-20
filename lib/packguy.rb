@@ -7,6 +7,7 @@ class Packguy
 
   BUNDLE_TARGET_PATH = 'bundle'
   BUNDLE_EXTENSIONS_PATH = 'extensions'
+  BUNDLE_PACKGUY_TOOLS_PATH = 'packguy_tools'
   BUNDLE_BUNDLER_SETUP_FILE = 'bundler/setup.rb'
 
   PACKGUY_PACKFILE = 'Packfile'
@@ -114,12 +115,13 @@ class Packguy
 
     prefix_path = config[:deb_prefix]
     sfiles_map = packager.prepare_files(prefix_path)
+    template_values = packager.template_values(prefix_path)
 
     deb_package_file = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, deb_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s %s' %
+    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s --template-scripts %s %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -131,6 +133,7 @@ class Packguy
             packager.author,
             pkg_file,
             packager.after_install_script,
+            template_values,
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
@@ -144,12 +147,13 @@ class Packguy
 
     prefix_path = config[:rpm_prefix]
     sfiles_map = packager.prepare_files(prefix_path)
+    template_values = packager.template_values(prefix_path)
 
     rpm_package_file = '%s_%s_%s.rpm' % [ packager.package_name, packager.version, packager.architecture ]
     pkg_file = File.join(packager.pkg_path, rpm_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s %s' %
+    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s --template-scripts %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -161,6 +165,7 @@ class Packguy
             packager.author,
             pkg_file,
             packager.after_install_script,
+            template_values,
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
@@ -415,6 +420,17 @@ GEMFILE
       end
     end
 
+    files = gather_packguy_tools_for_package(files)
+
+    files
+  end
+
+  def gather_packguy_tools_for_package(files)
+    target_tools_path = File.join(BUNDLE_PACKGUY_TOOLS_PATH)
+
+    gem_build_extensions = File.expand_path('../../bin/support/gem_build_extensions', __FILE__)
+    files[gem_build_extensions] = File.join(target_tools_path, File.basename(gem_build_extensions))
+
     files
   end
 
@@ -532,6 +548,14 @@ CODE
     end unless @opts[:binstub].nil?
 
     source_files_map(files)
+  end
+
+  def template_values(prefix_path)
+    values = { 'pg_PACKAGE_PATH' => File.join(prefix_path, package_name) }
+
+    values.collect do |k, v|
+      '--template-value %s="%s"' % [ k, v ]
+    end.join(' ')
   end
 
   def source_files_map(files)
