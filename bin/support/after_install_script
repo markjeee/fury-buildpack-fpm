@@ -9,9 +9,7 @@ fi
 
 this_dir=$(cd $(dirname $0); pwd)
 
-if [ -n "$1" ]; then
-    PACKAGE_PATH=$1
-elif [ -n "$PACKAGE_PATH" ]; then
+if [ -n "$PACKAGE_PATH" ]; then
     eval "export PACKAGE_PATH=$PACKAGE_PATH"
 else
     echo "ERROR: PACKAGE_PATH is not set. Aborting."
