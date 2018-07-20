@@ -119,7 +119,7 @@ class Packguy
     pkg_file = File.join(packager.pkg_path, deb_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -130,6 +130,7 @@ class Packguy
             packager.license,
             packager.author,
             pkg_file,
+            packager.after_install_script,
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
@@ -148,7 +149,7 @@ class Packguy
     pkg_file = File.join(packager.pkg_path, rpm_package_file)
     FileUtils.mkpath(File.dirname(pkg_file))
 
-    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby %s' %
+    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s -d ruby --after-install %s %s' %
           [ fpm_exec_path,
             packager.architecture,
             packager.maintainer,
@@ -159,6 +160,7 @@ class Packguy
             packager.license,
             packager.author,
             pkg_file,
+            packager.after_install_script,
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
@@ -315,6 +317,10 @@ GEMFILE
     else
       @opts[:package_name]
     end
+  end
+
+  def after_install_script
+    File.expand_path('../../bin/support/after_install_script', __FILE__)
   end
 
   def version
