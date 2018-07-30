@@ -89,6 +89,7 @@ end
 
 module BuildpackSpec
   TMP_BUILDPACK_SPEC_GEMS = File.expand_path('../../tmp/buildpack_spec/gems', __FILE__)
+  TMP_BUILDPACK_SPEC_BUNDLE_WORKING_PATH = File.expand_path('../../tmp/buildpack_spec/bundle', __FILE__)
   COMPILE_PATH = File.expand_path('../../bin/compile', __FILE__)
 
   SPEC_GEMS = {
@@ -101,7 +102,13 @@ module BuildpackSpec
   }
 
   def self.compile(gem_name)
-    cmd = '%s %s >/dev/null 2>&1' % [ COMPILE_PATH, spec_gem_extract_path(gem_name) ]
+    env_vars = {
+      'PACKGUY_BUNDLE_WORKING_PATH' => buildpack_spec_bundle_working_path
+    }
+
+    env_vars = env_vars.inject([]) { |a, (k,v)| a << '%s=%s' % [ k, v ]; a }.join(' ')
+
+    cmd = 'env %s %s %s >/dev/null 2>&1' % [ env_vars, COMPILE_PATH, spec_gem_extract_path(gem_name) ]
     system(cmd)
   end
 
@@ -119,6 +126,10 @@ module BuildpackSpec
 
   def self.buildpack_spec_gems_path
     TMP_BUILDPACK_SPEC_GEMS
+  end
+
+  def self.buildpack_spec_bundle_working_path
+    TMP_BUILDPACK_SPEC_BUNDLE_WORKING_PATH
   end
 
   def self.prepare_buildpack_spec_gems_path

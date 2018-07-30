@@ -27,7 +27,8 @@ class Packguy
     :package_name => nil,
     :working_path => nil,
 
-    :dependencies => { }
+    :dependencies => { },
+    :bundle_working_path => nil
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -48,6 +49,10 @@ class Packguy
       config[:packages] = ENV['PACKGUY_PACKAGES'].split(',').collect { |p| p.to_sym }
     elsif config[:packages].nil?
       config[:packages] = DEFAULT_PACKAGES
+    end
+
+    if ENV.include?('PACKGUY_BUNDLE_WORKING_PATH')
+      config[:bundle_working_path] = File.expand_path(ENV['PACKGUY_BUNDLE_WORKING_PATH'])
     end
 
     config[:dependencies] = { 'ruby' => nil }
@@ -143,7 +148,7 @@ class Packguy
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
-    system(cmd)
+    Bundler.clean_system(cmd)
 
     [ packager, pkg_file ]
   end
@@ -177,7 +182,7 @@ class Packguy
             sfiles_map ]
 
     puts 'CMD: %s' % cmd
-    system(cmd)
+    Bundler.clean_system(cmd)
 
     [ packager, pkg_file ]
   end
@@ -231,27 +236,22 @@ class Packguy
         ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
       end
 
-      if File.exists?(bundle_working_path)
-        FileUtils.rm_r(bundle_working_path)
-      end
-
       install_opts = { }
       install_opts[:with] = [ :default ]
       install_opts[:without] = [ :development, :test, :documentation ]
       install_opts[:path] = bundle_working_path
-      install_opts[:redownload] = true
       install_opts[:retry] = 3
       install_opts[:jobs] = 3
 
       Bundler.ui = Bundler::UI::Shell.new
       Bundler.ui.info 'Bundling with: %s' % File.expand_path(ENV['BUNDLE_GEMFILE'])
 
-      Bundler.settings.temporary(install_opts)
+      Bundler.settings.temporary(install_opts) do
+        @bundle_def = ::Bundler.definition
+        @bundle_def.validate_runtime!
+      end
 
-      @bundle_def = ::Bundler.definition
-      @bundle_def.validate_runtime!
-
-      Bundler.settings.temporary(:no_install => true) do
+      Bundler.settings.temporary({ :no_install => true }.merge(install_opts)) do
         Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
       end
 
@@ -262,7 +262,6 @@ class Packguy
         next unless spec.source.is_a?(Bundler::Source::Rubygems)
 
         cached_gem = spec.source.send(:cached_gem, spec)
-
         installer = Gem::Installer.at(cached_gem, :path => rubygems_dir)
         installer.extract_files
         installer.write_spec
@@ -317,7 +316,7 @@ GEMFILE
   end
 
   def bundle_working_path
-    File.join(working_path, 'bundle')
+    @opts[:bundle_working_path] || File.join(working_path, 'bundle')
   end
 
   def package_working_path

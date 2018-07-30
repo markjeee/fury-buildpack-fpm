@@ -9,7 +9,7 @@ unless ENV.include?('PACKGUY_PACKAGES')
 end
 
 $:.unshift File.expand_path(ARGV[0])
-
 Packguy.config[:path] = File.expand_path(ARGV[0])
+
 Packguy.setup
 Packguy.build_package
