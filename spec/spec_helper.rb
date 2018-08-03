@@ -92,6 +92,8 @@ module BuildpackSpec
   TMP_BUILDPACK_SPEC_BUNDLE_WORKING_PATH = File.expand_path('../../tmp/buildpack_spec/bundle', __FILE__)
   COMPILE_PATH = File.expand_path('../../bin/compile', __FILE__)
 
+  VALID_BUILD_PATH = File.expand_path('../valid_build', __FILE__)
+
   SPEC_GEMS = {
     'fpm' => 'https://github.com/jordansissel/fpm/archive/master.tar.gz',
     'gemfury' => 'https://github.com/gemfury/gemfury/archive/master.tar.gz',
@@ -101,15 +103,21 @@ module BuildpackSpec
     'thin' => 'https://github.com/macournoyer/thin/archive/master.tar.gz'
   }
 
-  def self.compile(gem_name)
+  def self.compile(build_path, env_vars = { }, opts = { })
+    env_vars = env_vars.inject([]) { |a, (k,v)| a << '%s=%s' % [ k, v ]; a }.join(' ')
+
+    cmd = 'env %s %s %s %s' %
+          [ env_vars, COMPILE_PATH, build_path, opts[:no_stdout] ? '>/dev/null 2>&1' : '' ]
+
+    system(cmd)
+  end
+
+  def self.compile_with_gems(gem_name)
     env_vars = {
       'PACKGUY_BUNDLE_WORKING_PATH' => buildpack_spec_bundle_working_path
     }
 
-    env_vars = env_vars.inject([]) { |a, (k,v)| a << '%s=%s' % [ k, v ]; a }.join(' ')
-
-    cmd = 'env %s %s %s >/dev/null 2>&1' % [ env_vars, COMPILE_PATH, spec_gem_extract_path(gem_name) ]
-    system(cmd)
+    compile(spec_gem_extract_path(gem_name), env_vars, no_stdout: true)
   end
 
   def self.spec_gem_extract_path(gem_name)

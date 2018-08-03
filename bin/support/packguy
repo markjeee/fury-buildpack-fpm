@@ -3,13 +3,69 @@
 $:.unshift File.expand_path('../../../lib', __FILE__)
 require 'packguy'
 
-ENV['FPM_EXEC_PATH'] = File.expand_path('../fpm', __FILE__)
+build_path = File.expand_path(ARGV[0])
+
+ENV['FPM_EXEC_PATH'] = fpm_exec_path = File.expand_path('../fpm', __FILE__)
 unless ENV.include?('PACKGUY_PACKAGES')
   ENV['PACKGUY_PACKAGES'] = 'deb'
 end
 
-$:.unshift File.expand_path(ARGV[0])
-Packguy.config[:path] = File.expand_path(ARGV[0])
+puts 'Using fpm path   : %s' % fpm_exec_path
+puts 'Using build path : %s' % build_path
+
+if ENV['GEM_SPECFILE']
+  gemspec_file = ENV['GEM_SPECFILE']
+  unless gemspec_file =~ /^\/(.+)$/
+    gemspec_file = File.join(build_path, gemspec_file)
+  end
+
+  unless File.exists?(gemspec_file)
+    puts 'ERROR: Specified gemspec file %s not found, aborting' % gemspec_file
+    exit 1
+  end
+else
+  paths = Dir.glob(File.join(build_path, '/*.gemspec'))
+  if paths.empty?
+    puts 'ERROR: No gemspec file found, aborting.'
+    exit 1
+  elsif paths.count > 1
+    puts 'ERROR: Multiple gemspec file found, aborting.'
+    exit 1
+  end
+
+  gemspec_file = paths[0]
+end
+
+puts 'Using spec file  : %s' % gemspec_file
+
+bundle_gemfile = nil
+if ENV['BUNDLE_GEMFILE']
+  bundle_gemfile = ENV['BUNDLE_GEMFILE']
+
+  unless bundle_gemfile =~ /^\/(.+)$/
+    bundle_gemfile = File.join(build_path, bundle_gemfile)
+  end
+
+  unless File.exists?(bundle_gemfile)
+    puts 'ERROR: Specified bundle gemfile %s not found, aborting' % bundle_gemfile
+    exit 1
+  end
+
+  puts 'Using Gemfile    : %s' % bundle_gemfile
+end
+
+puts '=================='
+
+$:.unshift(build_path)
+Packguy.config[:path] = build_path
+Packguy.config[:gemspec] = gemspec_file
+
+unless bundle_gemfile.nil?
+  Packguy.config[:gemfile] = bundle_gemfile
+end
 
 Packguy.setup
-Packguy.build_package
+
+unless ENV['TEST_NOBUILD']
+  Packguy.build_package
+end

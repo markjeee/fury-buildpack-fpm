@@ -194,18 +194,16 @@ class Packguy
   def initialize(opts = { })
     @opts = self.class.config.merge(opts)
 
-    if !ENV['BUNDLE_GEMFILE'].nil?
-      @gemfile = Bundler::SharedHelpers.default_gemfile
-    elsif @opts[:gemfile].nil?
-      @gemfile = autogenerate_clean_gemfile
-    else
-      @gemfile = Pathname.new(@opts[:gemfile])
-    end
-
     if @opts[:gemspec].nil?
       @gemspec_file = find_default_gemspec_file
     else
       @gemspec_file = @opts[:gemspec]
+    end
+
+    if @opts[:gemfile].nil?
+      @gemfile = autogenerate_clean_gemfile
+    else
+      @gemfile = Pathname.new(@opts[:gemfile])
     end
   end
 
@@ -232,9 +230,7 @@ class Packguy
     if defined?(@bundle_def)
       @bundle_def
     else
-      if ENV['BUNDLE_GEMFILE'].nil?
-        ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
-      end
+      ENV['BUNDLE_GEMFILE'] = @gemfile.to_s
 
       install_opts = { }
       install_opts[:with] = [ :default ]
@@ -244,7 +240,7 @@ class Packguy
       install_opts[:jobs] = 3
 
       Bundler.ui = Bundler::UI::Shell.new
-      Bundler.ui.info 'Bundling with: %s' % File.expand_path(ENV['BUNDLE_GEMFILE'])
+      Bundler.ui.info 'Bundling with: %s' % @gemfile.to_s
 
       Bundler.settings.temporary(install_opts) do
         @bundle_def = ::Bundler.definition
@@ -286,10 +282,14 @@ class Packguy
 
     gemfile_path = File.join(working_path, 'Gemfile')
     File.open(gemfile_path, 'w') do |f|
-      f.write <<GEMFILE
+      gemfile_content = <<GEMFILE
 source "http://rubygems.org"
-gemspec :path => '../../'
+gemspec :path => '%s', :name => '%s'
 GEMFILE
+
+      gemfile_content = gemfile_content % [ File.dirname(@gemspec_file),
+                                            File.basename(@gemspec_file, '.gemspec') ]
+      f.write(gemfile_content)
     end
 
     Pathname.new(gemfile_path)
