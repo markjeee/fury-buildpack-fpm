@@ -143,6 +143,10 @@ module BuildpackSpec
   def self.prepare_buildpack_spec_gems_path
     FileUtils.mkpath(buildpack_spec_gems_path)
   end
+
+  def self.packguy_setup(opts = { })
+    Packaguy.setup
+  end
 end
 
 # Requires supporting ruby files with custom matchers and macros, etc,

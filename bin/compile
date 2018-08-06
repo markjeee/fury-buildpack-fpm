@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
-# bin/compile <build-dir> <cache-dir>
 
-# Set UTF-8 as the default encoding
-# http://stackoverflow.com/questions/17031651/invalid-byte-sequence-in-us-ascii-argument-error-when-i-run-rake-dbseed-in-ra
 export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
@@ -28,7 +25,6 @@ fi
 bin_dir=$(cd $(dirname $0); pwd)
 buildpack_fpm_dir=$(dirname "$bin_dir")
 
-# == UNPACK bundled fpm gem ==
 vendor_buildpack_cache_dir=$buildpack_fpm_dir/vendor/buildpack-cache
 vendor_buildpack_cache_file=$(ruby -e "puts 'bundle_%s_%s_%s.tar.gz' % [ defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby', RbConfig::CONFIG['ruby_version'], RbConfig::CONFIG['arch'] ]")
 
@@ -36,7 +32,6 @@ if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
     mkdir -p $buildpack_fpm_dir/bundle
     cd $buildpack_fpm_dir/bundle; tar -xzpf $vendor_buildpack_cache_dir/$vendor_buildpack_cache_file
 fi
-# == END bundled fpm gem ==
 
 if [ -n "$BUILD_VERSION" ]; then
     export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')

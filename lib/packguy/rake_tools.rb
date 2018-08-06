@@ -4,7 +4,7 @@ require 'fileutils'
 class Packguy
   module RakeTools
     BUNDLE_SOURCE_PATH = 'bundle'
-    VENDORIZED_FPM_PATH = File.expand_path('../../../bin/support/vendorized_fpm', __FILE__)
+    VENDORIZED_FPM_PATH = File.expand_path('../../../bin/support/create_vendored_fpm', __FILE__)
 
     def self.preserve_bundler_config(root_path)
       bundle_config = File.join(root_path, '.bundle/config')

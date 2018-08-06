@@ -28,7 +28,9 @@ class Packguy
     :working_path => nil,
 
     :dependencies => { },
-    :bundle_working_path => nil
+    :bundle_working_path => nil,
+
+    :fpm_exec_path => nil
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -55,7 +57,9 @@ class Packguy
       config[:bundle_working_path] = File.expand_path(ENV['PACKGUY_BUNDLE_WORKING_PATH'])
     end
 
-    config[:dependencies] = { 'ruby' => nil }
+    unless config[:dependencies].include?('ruby')
+      config[:dependencies]['ruby'] = nil
+    end
   end
 
   def self.load_packfile
@@ -188,7 +192,7 @@ class Packguy
   end
 
   def self.fpm_exec_path
-    ENV['FPM_EXEC_PATH'] || 'fpm'
+    ENV['FPM_EXEC_PATH'] || config[:fpm_exec_path] || 'fpm'
   end
 
   def initialize(opts = { })
@@ -406,8 +410,15 @@ GEMFILE
   end
 
   def add_ruby_build_dependencies!
-    @opts[:dependencies]['ruby-dev'] = nil
-    @opts[:dependencies]['ruby-build'] = nil
+    unless @opts[:dependencies].include?('ruby-dev')
+      @opts[:dependencies]['ruby-dev'] = @opts[:dependencies]['ruby']
+    end
+
+    unless @opts[:dependencies].include?('ruby-build')
+      @opts[:dependencies]['ruby-build'] = @opts[:dependencies]['ruby']
+    end
+
+    @opts[:dependencies]
   end
 
   def gather_files_for_package
@@ -569,7 +580,7 @@ CODE
       if v.nil?
         '-d %s' % k
       else
-        '-d "%s %s"' % [ k, v ]
+        '-d "%s%s"' % [ k, v ]
       end
     end.join(' ')
   end

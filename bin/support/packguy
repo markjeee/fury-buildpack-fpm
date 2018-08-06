@@ -3,15 +3,21 @@
 $:.unshift File.expand_path('../../../lib', __FILE__)
 require 'packguy'
 
+fpm_exec_path = File.expand_path('../fpm', __FILE__)
 build_path = File.expand_path(ARGV[0])
 
-ENV['FPM_EXEC_PATH'] = fpm_exec_path = File.expand_path('../fpm', __FILE__)
-unless ENV.include?('PACKGUY_PACKAGES')
-  ENV['PACKGUY_PACKAGES'] = 'deb'
+unless File.exists?(build_path)
+  puts 'ERROR: Build path %s do not exist, aborting.' % build_path
+  exit 1
 end
+
+$:.unshift(build_path)
 
 puts 'Using fpm path   : %s' % fpm_exec_path
 puts 'Using build path : %s' % build_path
+
+Packguy.config[:fpm_exec_path] = fpm_exec_path
+Packguy.config[:path] = build_path
 
 if ENV['GEM_SPECFILE']
   gemspec_file = ENV['GEM_SPECFILE']
@@ -20,7 +26,7 @@ if ENV['GEM_SPECFILE']
   end
 
   unless File.exists?(gemspec_file)
-    puts 'ERROR: Specified gemspec file %s not found, aborting' % gemspec_file
+    puts 'ERROR: Specified gemspec file %s not found, aborting.' % gemspec_file
     exit 1
   end
 else
@@ -37,6 +43,7 @@ else
 end
 
 puts 'Using spec file  : %s' % gemspec_file
+Packguy.config[:gemspec] = gemspec_file
 
 bundle_gemfile = nil
 if ENV['BUNDLE_GEMFILE']
@@ -47,22 +54,39 @@ if ENV['BUNDLE_GEMFILE']
   end
 
   unless File.exists?(bundle_gemfile)
-    puts 'ERROR: Specified bundle gemfile %s not found, aborting' % bundle_gemfile
+    puts 'ERROR: Specified bundle gemfile %s not found, aborting.' % bundle_gemfile
     exit 1
   end
 
   puts 'Using Gemfile    : %s' % bundle_gemfile
+  Packguy.config[:gemfile] = bundle_gemfile
+end
+
+if ENV['PACKAGE_RUBY_VERSION'] && !ENV['PACKAGE_RUBY_VERSION'].empty?
+  ruby_version = ENV['PACKAGE_RUBY_VERSION']
+  puts 'Using ruby deps  : %s' % ruby_version
+else
+  ruby_version = nil
+  puts 'Using ruby deps  : latest'
+end
+
+Packguy.config[:dependencies]['ruby'] = ruby_version
+
+if ENV['PACKAGE_DEPENDENCIES']
+  deps = ENV['PACKAGE_DEPENDENCIES'].split(',')
+  deps.each do |d|
+    if d =~ /^([^\<\>\=]+)(.+)?$/
+      pname = $~[1]
+      pver = $~[2]
+      Packguy.config[:dependencies][pname] = pver
+    end
+  end
 end
 
 puts '=================='
 
-$:.unshift(build_path)
-Packguy.config[:path] = build_path
-Packguy.config[:gemspec] = gemspec_file
-
-unless bundle_gemfile.nil?
-  Packguy.config[:gemfile] = bundle_gemfile
-end
+# For now, only Debian package building is supported
+Packguy.config[:packages] = [ :deb ]
 
 Packguy.setup
 
