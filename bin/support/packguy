@@ -46,7 +46,7 @@ puts 'Using spec file  : %s' % gemspec_file
 Packguy.config[:gemspec] = gemspec_file
 
 bundle_gemfile = nil
-if ENV['BUNDLE_GEMFILE']
+if ENV['BUNDLE_GEMFILE'] && !ENV['BUNDLE_GEMFILE'].empty?
   bundle_gemfile = ENV['BUNDLE_GEMFILE']
 
   unless bundle_gemfile =~ /^\/(.+)$/
@@ -89,7 +89,6 @@ puts '=================='
 Packguy.config[:packages] = [ :deb ]
 
 Packguy.setup
-
 unless ENV['TEST_NOBUILD']
   Packguy.build_package
 end

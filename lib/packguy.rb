@@ -4,6 +4,7 @@ require 'bundler'
 class Packguy
   autoload :RakeTools, File.expand_path('../packguy/rake_tools', __FILE__)
   autoload :RakeTask, File.expand_path('../packguy/rake_task', __FILE__)
+  autoload :PatchBundlerNoMetadataDeps, File.expand_path('../packguy/patch_bundler_no_metadata_deps', __FILE__)
 
   BUNDLE_TARGET_PATH = 'bundle'
   BUNDLE_EXTENSIONS_PATH = 'extensions'
@@ -41,7 +42,12 @@ class Packguy
     :rpm => :build_rpm
   }
 
+  def self.load_patch
+    PatchBundlerNoMetadataDeps.patch!
+  end
+
   def self.setup
+    load_patch
     load_packfile
     setup_defaults
   end
