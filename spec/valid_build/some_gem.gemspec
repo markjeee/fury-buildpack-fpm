@@ -3,8 +3,8 @@ Gem::Specification.new do |s|
   s.date              = Time.now.strftime('%Y-%m-%d')
   s.version           = ENV["BUILD_VERSION"] || '0.1'
   s.summary           = 'A summary of some_gem'
-  s.homepage          = 'https://some_website.com'
-  s.email             = 'hello@some_website.com'
+  s.homepage          = 'https://gemfury.com'
+  s.email             = 'hello@gemfury.com'
   s.authors           = [ 'An author of some_gem' ]
   s.license           = 'MIT'
   s.has_rdoc          = false
