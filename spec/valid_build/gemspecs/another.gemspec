@@ -10,8 +10,8 @@ Gem::Specification.new do |s|
   s.has_rdoc          = false
 
   s.files             = %w(README.md) +
-                        Dir.glob("bin/**/*") +
-                        Dir.glob("lib/**/*")
+                        Dir.glob(File.join(File.expand_path('../../', __FILE__), "bin/**/*")) +
+                        Dir.glob(File.join(File.expand_path('../../', __FILE__), "lib/**/*"))
 
   s.description = <<DESCRIPTION
 This may be a long description of some_other_gem.

@@ -31,7 +31,8 @@ class Packguy
     :dependencies => { },
     :bundle_working_path => nil,
 
-    :fpm_exec_path => nil
+    :fpm_exec_path => nil,
+    :bundler_silent => false
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -201,8 +202,30 @@ class Packguy
     ENV['FPM_EXEC_PATH'] || config[:fpm_exec_path] || 'fpm'
   end
 
+  def self.gem_build_extensions_path
+    File.expand_path('../../bin/support/gem_build_extensions', __FILE__)
+  end
+
+  def self.silence_warnings
+    original_verbosity = $VERBOSE
+    $VERBOSE = nil
+    ret = yield
+    $VERBOSE = original_verbosity
+    ret
+  end
+
+  attr_reader :opts
+  attr_reader :gemfile
+  attr_reader :gemspec_file
+
   def initialize(opts = { })
     @opts = self.class.config.merge(opts)
+
+    unless @opts[:gemfile].nil?
+      @gemfile = Pathname.new(@opts[:gemfile])
+    else
+      @gemfile = nil
+    end
 
     if @opts[:gemspec].nil?
       @gemspec_file = find_default_gemspec_file
@@ -210,18 +233,21 @@ class Packguy
       @gemspec_file = @opts[:gemspec]
     end
 
-    if @opts[:gemfile].nil?
+    if @gemfile.nil?
       @gemfile = autogenerate_clean_gemfile
-    else
-      @gemfile = Pathname.new(@opts[:gemfile])
     end
+
+    self
   end
 
   def find_default_gemspec_file
     files = [ ]
     try_paths = [ ]
 
-    try_paths << @gemfile.untaint.expand_path.parent.to_s
+    unless @gemfile.nil?
+      try_paths << @gemfile.untaint.expand_path.parent.to_s
+    end
+
     try_paths << root_path
 
     try_paths.detect do |tpath|
@@ -249,16 +275,25 @@ class Packguy
       install_opts[:retry] = 3
       install_opts[:jobs] = 3
 
-      Bundler.ui = Bundler::UI::Shell.new
-      Bundler.ui.info 'Bundling with: %s' % @gemfile.to_s
+      # in case, we are called multiple times
+      Bundler.reset!
 
-      Bundler.settings.temporary(install_opts) do
-        @bundle_def = ::Bundler.definition
-        @bundle_def.validate_runtime!
+      if @opts[:bundler_silent]
+        Bundler.ui = Bundler::UI::Silent.new
+      else
+        Bundler.ui = Bundler::UI::Shell.new
+        Bundler.ui.info 'Bundling with: %s' % @gemfile.to_s
       end
 
-      Bundler.settings.temporary({ :no_install => true }.merge(install_opts)) do
-        Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
+      self.class.silence_warnings do
+        Bundler.settings.temporary(install_opts) do
+          @bundle_def = ::Bundler.definition
+          @bundle_def.validate_runtime!
+        end
+
+        Bundler.settings.temporary({ :no_install => true }.merge(install_opts)) do
+          Bundler::Installer.install(Bundler.root, @bundle_def, install_opts)
+        end
       end
 
       rubygems_dir = Bundler.rubygems.gem_dir
@@ -401,7 +436,14 @@ GEMFILE
         bhash[:orig_spec] = orig_spec
         bhash[:spec] = spec
         bhash[:gem_path] = spec.full_gem_path
-        bhash[:files] = spec.files - spec.test_files
+
+        bhash[:files] = Dir.glob(File.join(spec.full_gem_path, '**/*')).inject([ ]) { |a, f|
+          unless File.directory?(f)
+            a << f.gsub('%s/' % spec.full_gem_path, '')
+          end
+
+          a
+        }.uniq
 
         bhash[:require_paths] = spec.full_require_paths.collect { |path|
           path.include?(bhash[:gem_path]) ?
@@ -433,9 +475,12 @@ GEMFILE
     unless gemspec.nil?
       (gemspec.files - gemspec.test_files).each do |fname|
         next if File.directory?(fname)
+        fname = fname.gsub('%s/' % gemspec.full_gem_path, '')
         files[fname] = fname
       end
     end
+
+    include_packguy_tools = false
 
     bgems = bundle_gems
     bgems.each do |gem_name, bhash|
@@ -446,21 +491,24 @@ GEMFILE
 
       unless bhash[:spec].extensions.empty?
         add_ruby_build_dependencies!
+        include_packguy_tools = true
 
         files[bhash[:orig_spec].loaded_from] = File.join(BUNDLE_EXTENSIONS_PATH, '%s.gemspec' % gem_name)
       end
     end
 
-    files = gather_packguy_tools_for_package(files)
+    if include_packguy_tools
+      files = gather_packguy_tools_for_package(files)
+    end
 
     files
   end
 
   def gather_packguy_tools_for_package(files)
+    gem_build_extensions_path = self.class.gem_build_extensions_path
     target_tools_path = File.join(BUNDLE_PACKGUY_TOOLS_PATH)
 
-    gem_build_extensions = File.expand_path('../../bin/support/gem_build_extensions', __FILE__)
-    files[gem_build_extensions] = File.join(target_tools_path, File.basename(gem_build_extensions))
+    files[gem_build_extensions_path] = File.join(target_tools_path, File.basename(gem_build_extensions_path))
 
     files
   end

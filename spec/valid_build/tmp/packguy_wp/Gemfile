@@ -1,0 +1,2 @@
+source "http://rubygems.org"
+gemspec :path => '/Users/markj/work/fury/fury-buildpack-fpm/spec/valid_build', :name => 'some_gem'

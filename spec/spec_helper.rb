@@ -144,8 +144,10 @@ module BuildpackSpec
     FileUtils.mkpath(buildpack_spec_gems_path)
   end
 
-  def self.packguy_setup(opts = { })
-    Packaguy.setup
+  def self.packguy_setup(config = { })
+    Packguy.config.merge!({ :path => VALID_BUILD_PATH,
+                            :bundler_silent => true }.merge(config))
+    Packguy.setup
   end
 end
 

@@ -1,0 +1,25 @@
+Gem::Specification.new do |s|
+  s.name              = 'some_gem'
+  s.date              = Time.now.strftime('%Y-%m-%d')
+  s.version           = ENV["BUILD_VERSION"] || '0.1'
+  s.summary           = 'A summary of some_gem'
+  s.homepage          = 'https://some_website.com'
+  s.email             = 'hello@some_website.com'
+  s.authors           = [ 'An author of some_gem' ]
+  s.license           = 'MIT'
+  s.has_rdoc          = false
+
+  s.files             = %w(README.md)
+
+  local_path = File.expand_path('../', __FILE__)
+  Dir.glob(File.join(local_path, '{bin,lib}/**/*')).each do |f|
+    s.files << f.gsub('%s/' % local_path, '')
+  end
+
+  s.description       = <<DESCRIPTION
+This may be a long description of some_gem.
+DESCRIPTION
+
+  s.add_dependency   'highline'
+  s.add_dependency   'json'
+end

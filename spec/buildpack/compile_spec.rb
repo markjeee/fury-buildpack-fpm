@@ -33,7 +33,6 @@ describe 'Compile stage in Buildpack' do
   context 'when invoked' do
     before do
       #skip 'Disabling for now'
-
       BuildpackSpec::DownloadGems.check_and_download_gems_for_spec
     end
 
