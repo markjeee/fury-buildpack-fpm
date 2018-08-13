@@ -1,8 +1,8 @@
 require 'spec_helper'
 require 'packguy'
 
-describe 'Packguy setup' do
-  context 'default settings' do
+describe 'Packguy' do
+  context 'setup' do
     before do
       BuildpackSpec.packguy_setup
       @packguy = Packguy.new
@@ -61,6 +61,22 @@ describe 'Packguy setup' do
 
     it 'load custom gemspec file' do
       expect(@packguy.gemspec.name).to eq('some_other_gem')
+    end
+  end
+
+  context 'prepare' do
+    it 'should gather files' do
+      skip 'TODO'
+    end
+
+    it 'should prepare files' do
+      skip 'TODO'
+    end
+  end
+
+  context 'package' do
+    it 'should build package' do
+      skip 'TODO'
     end
   end
 end

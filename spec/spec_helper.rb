@@ -93,6 +93,7 @@ module BuildpackSpec
   COMPILE_PATH = File.expand_path('../../bin/compile', __FILE__)
 
   VALID_BUILD_PATH = File.expand_path('../valid_build', __FILE__)
+  VENDOR_CACHE = File.expand_path('../vendor_cache', __FILE__)
 
   SPEC_GEMS = {
     'fpm' => 'https://github.com/jordansissel/fpm/archive/master.tar.gz',
@@ -144,10 +145,26 @@ module BuildpackSpec
     FileUtils.mkpath(buildpack_spec_gems_path)
   end
 
+  def self.copy_vendor_cache(working_path)
+    target_vc_path = Pathname.new(working_path).join('vendor/cache')
+    unless target_vc_path.exist?
+      FileUtils.mkpath(target_vc_path)
+      FileUtils.cp_r(Dir.glob('%s/*' % VENDOR_CACHE), target_vc_path)
+    end
+
+    target_vc_path
+  end
+
   def self.packguy_setup(config = { })
     Packguy.config.merge!({ :path => VALID_BUILD_PATH,
-                            :bundler_silent => true }.merge(config))
+                            :working_path => File.join(VALID_BUILD_PATH, 'tmp_packguy_wp'),
+                            :bundler_silent => true,
+                            :bundler_local => true
+                          }.merge(config))
     Packguy.setup
+    copy_vendor_cache(Packguy.config[:working_path])
+
+    Packguy
   end
 end
 

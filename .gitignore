@@ -6,4 +6,4 @@ Gemfile.lock
 config.tmp
 /vendor/cache
 /bundle_tarball
-spec/valid_build/tmp/packguy_wp
+spec/valid_build/tmp_packguy_wp

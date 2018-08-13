@@ -32,7 +32,8 @@ class Packguy
     :bundle_working_path => nil,
 
     :fpm_exec_path => nil,
-    :bundler_silent => false
+    :bundler_silent => false,
+    :bundler_local => false
   }
 
   DEFAULT_PACKAGES = [ :deb, :rpm ]
@@ -283,6 +284,10 @@ class Packguy
       else
         Bundler.ui = Bundler::UI::Shell.new
         Bundler.ui.info 'Bundling with: %s' % @gemfile.to_s
+      end
+
+      if @opts[:bundler_local]
+        install_opts[:local] = true
       end
 
       self.class.silence_warnings do
