@@ -7,8 +7,6 @@ Gem::Specification.new do |s|
   s.email             = 'hello@gemfury.com'
   s.authors           = [ 'An author of some_gem' ]
   s.license           = 'MIT'
-  s.has_rdoc          = false
-
   s.files             = %w(README.md)
 
   local_path = File.expand_path('../', __FILE__)
