@@ -65,18 +65,47 @@ describe 'Packguy' do
   end
 
   context 'prepare' do
+    before do
+      BuildpackSpec.packguy_setup
+      @packguy = Packguy.new
+      @prefix_path = @packguy.opts[:deb_prefix]
+    end
+
     it 'should gather files' do
-      skip 'TODO'
+      files = @packguy.gather_files
+
+      expect(files).to include('README.md')
+      expect(files).to include('lib/some_gem.rb')
+      expect(files).to include('bundle/bundler/setup.rb')
     end
 
     it 'should prepare files' do
-      skip 'TODO'
+      source_files_map = @packguy.prepare_files(@prefix_path)
+
+      expect(source_files_map).not_to be_nil
+      expect(source_files_map).not_to be_empty
     end
   end
 
-  context 'package' do
+  context 'deb package' do
+    before do
+      BuildpackSpec.packguy_setup
+      @package, @pkg_file = Packguy.build_deb
+    end
+
     it 'should build package' do
-      skip 'TODO'
+      expect(File.exists?(@pkg_file)).to be_truthy
+    end
+  end
+
+  context 'rpm package' do
+    before do
+      BuildpackSpec.packguy_setup
+      @package, @pkg_file = Packguy.build_rpm
+    end
+
+    it 'should build package' do
+      expect(File.exists?(@pkg_file)).to be_truthy
     end
   end
 end

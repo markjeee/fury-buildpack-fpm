@@ -6,6 +6,11 @@ class Packguy
   autoload :RakeTask, File.expand_path('../packguy/rake_task', __FILE__)
   autoload :PatchBundlerNoMetadataDeps, File.expand_path('../packguy/patch_bundler_no_metadata_deps', __FILE__)
 
+  autoload :DebPackage, File.expand_path('../packguy/deb_package', __FILE__)
+  autoload :RpmPackage, File.expand_path('../packguy/rpm_package', __FILE__)
+
+  autoload :FpmExec, File.expand_path('../packguy/fpm_exec', __FILE__)
+
   BUNDLE_TARGET_PATH = 'bundle'
   BUNDLE_EXTENSIONS_PATH = 'extensions'
   BUNDLE_PACKGUY_TOOLS_PATH = 'packguy_tools'
@@ -132,75 +137,11 @@ class Packguy
   end
 
   def self.build_deb(opts = { })
-    packager = new(opts)
-
-    prefix_path = config[:deb_prefix]
-    sfiles_map = packager.prepare_files(prefix_path)
-    template_values = packager.template_values(prefix_path)
-    package_deps = packager.package_dependencies
-
-    deb_package_file = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
-    pkg_file = File.join(packager.pkg_path, deb_package_file)
-    FileUtils.mkpath(File.dirname(pkg_file))
-
-    cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s --after-install %s --template-scripts %s %s %s' %
-          [ fpm_exec_path,
-            packager.architecture,
-            packager.maintainer,
-            packager.package_name,
-            packager.version,
-            packager.description,
-            packager.homepage,
-            packager.license,
-            packager.author,
-            pkg_file,
-            packager.after_install_script,
-            package_deps,
-            template_values,
-            sfiles_map ]
-
-    puts 'CMD: %s' % cmd
-    Bundler.clean_system(cmd)
-
-    [ packager, pkg_file ]
+    DebPackage.build_package(opts)
   end
 
   def self.build_rpm(opts = { })
-    packager = new(opts)
-
-    prefix_path = config[:rpm_prefix]
-    sfiles_map = packager.prepare_files(prefix_path)
-    template_values = packager.template_values(prefix_path)
-    package_deps = packager.package_dependencies
-
-    rpm_package_file = '%s_%s_%s.rpm' % [ packager.package_name, packager.version, packager.architecture ]
-    pkg_file = File.join(packager.pkg_path, rpm_package_file)
-    FileUtils.mkpath(File.dirname(pkg_file))
-
-    cmd = '%s --log warn -f -s dir -t rpm --rpm-os linux -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s --after-install %s --template-scripts %s %s %s' %
-          [ fpm_exec_path,
-            packager.architecture,
-            packager.maintainer,
-            packager.package_name,
-            packager.version,
-            packager.description,
-            packager.homepage,
-            packager.license,
-            packager.author,
-            pkg_file,
-            packager.after_install_script,
-            package_deps,
-            template_values,
-            sfiles_map ]
-
-    puts 'CMD: %s' % cmd
-    Bundler.clean_system(cmd)
-
-    [ packager, pkg_file ]
-  end
-
-  def self.fpm_exec_path
-    ENV['FPM_EXEC_PATH'] || config[:fpm_exec_path] || 'fpm'
+    RpmPackage.build_package(opts)
   end
 
   def self.gem_build_extensions_path
