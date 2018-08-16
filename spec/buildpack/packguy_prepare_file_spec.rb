@@ -1,12 +1,13 @@
-require 'spec_helper'
+
+require_relative '../spec_helper'
 require 'packguy'
 
-describe 'Packguy files preparation' do
+describe 'Packguy file preparation' do
   context 'prepare files' do
     before do
       BuildpackSpec.packguy_setup
       @packguy = Packguy.new
-      @prefix_path = @packguy.opts[:deb_prefix]
+      @prefix_path = Packguy::DebPackage::INSTALL_PREFIX
     end
 
     it 'should build source files' do
@@ -21,7 +22,7 @@ describe 'Packguy files preparation' do
     before do
       BuildpackSpec.packguy_setup
       @packguy = Packguy.new
-      @prefix_path = @packguy.opts[:deb_prefix]
+      @prefix_path = Packguy::DebPackage::INSTALL_PREFIX
     end
 
     it 'should include gem build tool' do

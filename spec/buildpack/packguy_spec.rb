@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../spec_helper'
 require 'packguy'
 
 describe 'Packguy' do
@@ -68,7 +68,7 @@ describe 'Packguy' do
     before do
       BuildpackSpec.packguy_setup
       @packguy = Packguy.new
-      @prefix_path = @packguy.opts[:deb_prefix]
+      @prefix_path = Packguy::DebPackage::INSTALL_PREFIX
     end
 
     it 'should gather files' do

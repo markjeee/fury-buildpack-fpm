@@ -1,4 +1,13 @@
+require 'bundler'
 require 'fileutils'
+
+ENV['BUNDLE_GEMFILE'] = File.expand_path('../../Gemfile', __FILE__)
+Bundler.setup
+
+$:.unshift File.expand_path('../../lib', __FILE__)
+require 'packguy'
+
+require 'rspec'
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|

@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '../spec_helper'
 require 'packguy'
 
 describe 'Packguy bundle_gems' do

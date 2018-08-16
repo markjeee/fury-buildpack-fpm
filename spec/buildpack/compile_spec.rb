@@ -1,4 +1,5 @@
-require 'spec_helper'
+require_relative '../spec_helper'
+require 'packguy'
 
 describe 'Compile stage in Buildpack' do
   context 'when passed valid build path' do

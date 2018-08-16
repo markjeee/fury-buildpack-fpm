@@ -26,9 +26,6 @@ class Packguy
     :packages => nil,
     :architecture => 'all',
 
-    :rpm_prefix => '/usr/share/ruby/vendor_ruby/',
-    :deb_prefix => '/usr/lib/ruby/vendor_ruby/',
-
     # maybe specified, if wanting to override as set in gemspec file
     :package_name => nil,
     :working_path => nil,
@@ -322,10 +319,6 @@ GEMFILE
     end
   end
 
-  def after_install_script
-    File.expand_path('../../bin/support/after_install_script', __FILE__)
-  end
-
   def version
     gemspec.version
   end
@@ -572,30 +565,6 @@ CODE
       files[src_binstub_file] = binstub_file
     end unless @opts[:binstub].nil?
 
-    source_files_map(files)
-  end
-
-  def package_dependencies
-    @opts[:dependencies].collect do |k, v|
-      if v.nil?
-        '-d %s' % k
-      else
-        '-d "%s%s"' % [ k, v ]
-      end
-    end.join(' ')
-  end
-
-  def template_values(prefix_path)
-    values = { 'pg_PACKAGE_PATH' => File.join(prefix_path, package_name) }
-
-    values.collect do |k, v|
-      '--template-value %s="%s"' % [ k, v ]
-    end.join(' ')
-  end
-
-  def source_files_map(files)
-    files.inject([ ]) do |a, (k,v)|
-      a << '%s=%s' % [ k, v ]; a
-    end.join(' ')
+    files
   end
 end

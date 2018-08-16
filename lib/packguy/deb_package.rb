@@ -2,41 +2,19 @@ require 'bundler'
 
 class Packguy
   class DebPackage
+    INSTALL_PREFIX = '/usr/lib/ruby/vendor_ruby/'
+
     def self.build_package(opts = { })
       packager = Packguy.new(opts)
+      fpm_exec = FpmExec.new(packager, INSTALL_PREFIX)
 
-      prefix_path = packager.opts[:deb_prefix]
-      sfiles_map = packager.prepare_files(prefix_path)
-      template_values = packager.template_values(prefix_path)
-      package_deps = packager.package_dependencies
+      sfiles_map = packager.prepare_files(INSTALL_PREFIX)
+      package_filename = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
+      pkg_file_path = fpm_exec.build(sfiles_map, package_filename, type: :deb)
 
-      fpm_exec_path = Packguy::FpmExec.fpm_exec_path
-      deb_package_file = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
-      pkg_file = File.join(packager.pkg_path, deb_package_file)
-      FileUtils.mkpath(File.dirname(pkg_file))
+      Bundler.ui.info 'Created package: %s' % pkg_file_path
 
-      cmd = '%s --log warn -f -s dir -t deb -a %s -m "%s" -n %s -v %s --description "%s" --url "%s" --license "%s" --vendor "%s" -p %s --after-install %s --template-scripts %s %s %s >/dev/null 2>&1' %
-            [ fpm_exec_path,
-              packager.architecture,
-              packager.maintainer,
-              packager.package_name,
-              packager.version,
-              packager.description,
-              packager.homepage,
-              packager.license,
-              packager.author,
-              pkg_file,
-              packager.after_install_script,
-              package_deps,
-              template_values,
-              sfiles_map ]
-
-      Bundler.ui.info 'CMD: %s' % cmd
-      Bundler.clean_system(cmd)
-
-      Bundler.ui.info 'Created package: %s' % pkg_file
-
-      [ packager, pkg_file ]
+      [ packager, pkg_file_path ]
     end
   end
 end
