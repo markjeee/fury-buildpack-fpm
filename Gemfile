@@ -1,9 +1,13 @@
 source 'https://rubygems.org'
 
-gem 'rake', '~> 12.2.0'
+gem 'rake', '~> 12.2.1'
 gem 'fpm'
 
-group :development do
+group :development, :test do
   gem 'rspec'
-  gem 'docker_task', '~> 0.1', :source => 'https://repo.nlevel.io/ruby/'
+
+  #gem 'docker_task', :path => File.expand_path('~/work/docker_task')
+  source 'https://repo.nlevel.io/ruby/' do
+    gem 'docker_task', '0.1.4.alpha.3.g35e73ba'
+  end
 end

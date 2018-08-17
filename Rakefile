@@ -1,26 +1,32 @@
 require 'rbconfig'
 require 'bundler'
+
+Bundler.setup
+$:.unshift File.expand_path('../lib', __FILE__)
+
 require 'rspec/core/rake_task'
 require 'docker_task'
-
-$:.unshift File.expand_path('../lib', __FILE__)
 require 'packguy'
 
 RSpec::Core::RakeTask.new('spec')
 task :default => :spec
 
-docker_opts = {
-  :remote_repo => 'ruby',
-  :pull_tag => '1.9.3',
-  :image_name => 'ruby193'
-}
-
-docker_opts[:run] = lambda do |task, opts|
+docker_run = lambda do |task, opts|
   opts << '-v %s:/build' % File.expand_path('../', __FILE__)
   opts
 end
 
-DockerTask.include_tasks(docker_opts)
+DockerTask.create({ :remote_repo => 'nlevel/rubydev25',
+                    :pull_tag => 'latest',
+                    :image_name => 'fury-buildpack-fpm-ruby251',
+                    :run => docker_run })
+
+DockerTask.create({ :remote_repo => 'nlevel/rubydev19',
+                    :pull_tag => 'latest',
+                    :image_name => 'fury-buildpack-fpm-ruby193',
+                    :run => docker_run })
+
+DockerTask.include_tasks(:use => 'fury-buildpack-fpm-ruby251')
 
 desc 'Create bundle standalone'
 task :bundle_standalone do
@@ -38,9 +44,10 @@ task :bundle_standalone_tarball do
   puts 'Created bundle cache file: %s' % tarball_path
 end
 
+desc 'Create bundle for linux with ruby 1.9.3'
 task :bundle_for_linux do
-  ENV['EXEC'] = '/build/exec/build_linux'
-  Rake::Task['docker:runi'].invoke
+  c = DockerTask.containers['fury-buildpack-fpm-ruby251']
+  c.runi(:exec => '/build/exec/build_linux', :su => 'rubydev')
 end
 
 task :bundle_for_local => [ :bundle_standalone ]
