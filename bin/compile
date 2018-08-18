@@ -33,6 +33,22 @@ if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
     cd $buildpack_fpm_dir/bundle; tar -xzpf $vendor_buildpack_cache_dir/$vendor_buildpack_cache_file
 fi
 
+rpm_cache_file=$vendor_buildpack_cache_dir/rpm_$(uname -s)_$(uname -m).tar.gz
+if [ -f "$rpm_cache_file" ]; then
+    mkdir -p $buildpack_fpm_dir/rpm
+    cd $buildpack_fpm_dir/rpm; tar -xzpf $rpm_cache_file
+    export PATH=$buildpack_fpm_dir/rpm/bin:$PATH
+    export LD_LIBRARY_PATH=$buildpack_fpm_dir/rpm/lib:$LD_LIBRARY_PATH
+fi
+
+if [ -f "/etc/issue.net" ]; then
+    echo "Distro           : $(cat /etc/issue.net)"
+else
+    echo "Distro           : $(uname -a)"
+fi
+
+echo "Using rpm        : $(rpm --version)"
+
 if [ -n "$BUILD_VERSION" ]; then
     export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
     echo "BUILD_VERSION    : $BUILD_VERSION"

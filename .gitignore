@@ -7,3 +7,5 @@ config.tmp
 /vendor/cache
 /bundle_tarball
 spec/valid_build/tmp_packguy_wp
+/rpm/*
+/rpm_tarball/*

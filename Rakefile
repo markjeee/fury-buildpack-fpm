@@ -34,7 +34,7 @@ task :bundle_standalone do
   Rake::Task['bundle_standalone_tarball'].invoke
 end
 
-desc 'Create bundled tar ball'
+desc 'Create bundled tarball'
 task :bundle_standalone_tarball do
   root_path = File.expand_path('./')
   bundle_spath = File.expand_path('../bundle', __FILE__)
@@ -57,6 +57,18 @@ desc 'Create bundle for linux with ruby 1.9.3'
 task :bundle_for_linux_ruby193 do
   c = DockerTask.containers['fury-buildpack-fpm-ruby193']
   c.pull; c.runi(:exec => '/build/exec/build_for_linux_ruby193')
+end
+
+desc 'Create rpm vendor for linux'
+task :create_vendor_rpm_for_linux do
+  c = DockerTask.containers['fury-buildpack-fpm-ruby193']
+  c.pull; c.runi(:exec => '/build/exec/create_vendored_rpm')
+end
+
+desc 'Bash to ruby193 environment'
+task :bash_to_ruby193 do
+  c = DockerTask.containers['fury-buildpack-fpm-ruby193']
+  c.runi
 end
 
 task :bundle_for_local => [ :bundle_standalone ]

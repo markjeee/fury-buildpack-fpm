@@ -1,0 +1,35 @@
+#/usr/bin/env bash
+
+tarball_wp=/build/rpm_tarball
+buildpack_cache=/build/vendor/buildpack-cache/
+rpm_source="http://ftp.rpm.org/releases/rpm-4.11.x/rpm-4.11.3.tar.bz2"
+
+echo "Whoami           : $(whoami)"
+
+prepare_deps() {
+    apt update
+    apt -qq -y install libnss3-dev libnspr4-dev libmagic-dev libpopt-dev libdb-dev
+}
+
+compile_rpm() {
+    wget $rpm_source
+
+    bunzip2 rpm-*.tar.bz2
+    tar xvf rpm-*.tar
+    cd rpm-*
+
+    ./configure --prefix=$tarball_wp --with-external-db --without-lua CFLAGS="-I/usr/include/nss -I/usr/include/nspr"
+    make all && make install
+}
+
+cd ~
+
+prepare_deps
+compile_rpm
+
+cd $tarball_wp
+tar czvf rpm_$(uname -s)_$(uname -m).tar.gz *
+mv rpm_*.tar.gz $buildpack_cache
+
+cd ~
+rm -rf $tarball_wp
