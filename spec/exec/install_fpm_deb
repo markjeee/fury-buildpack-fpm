@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+export DEBIAN_FRONTEND=noninteractive
+deb_file="$1"
+deb_file_out="$1.test_out"
+
+cmd="apt -qq -y update"; echo $cmd; $cmd
+cmd="dpkg --unpack $deb_file"; echo $cmd; $cmd
+cmd="apt -o Dpkg::Progress-Fancy=1 -qq -y install -f"; echo $cmd; $cmd
+
+echo "$(which fpm)" | tee -a "$deb_file_out"
+echo "$(fpm -v)" | tee -a "$deb_file_out"

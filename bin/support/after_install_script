@@ -27,6 +27,7 @@ echo "After install script for: $PACKAGE_PATH"
 extensions_path=$PACKAGE_PATH/extensions
 if [ -d $extensions_path ]; then
     for gemspec in $extensions_path/*.gemspec; do
+        echo "== Processing $(basename $gemspec) =="
         $gem_build_extensions_path $PACKAGE_PATH/bundle $gemspec
     done
 fi

@@ -6,7 +6,7 @@ Bundler.setup
 
 $:.unshift File.expand_path('../../lib', __FILE__)
 require 'packguy'
-
+require 'docker_task'
 require 'rspec'
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
@@ -175,7 +175,51 @@ module BuildpackSpec
 
     Packguy
   end
+
+  def self.define_docker_containers
+    docker_run = lambda do |task, opts|
+      opts << '-v %s:/build' % File.expand_path('../../', __FILE__)
+      opts
+    end
+
+    show_commands = ENV['SHOW_COMMANDS'] ? true : false
+
+    DockerTask.create!({ :remote_repo => 'ubuntu',
+                         :pull_tag => 'xenial',
+                         :image_name => 'fury-buildpack-fpm-xenial',
+                         :run => docker_run,
+                         :show_commands => show_commands
+                       })
+
+    DockerTask.create!({ :remote_repo => 'ubuntu',
+                         :pull_tag => 'bionic',
+                         :image_name => 'fury-buildpack-fpm-bionic',
+                         :run => docker_run,
+                         :show_commands => show_commands
+                       })
+
+    DockerTask.create!({ :remote_repo => 'debian',
+                         :pull_tag => 'jessie',
+                         :image_name => 'fury-buildpack-fpm-jessie',
+                         :run => docker_run,
+                         :show_commands => show_commands
+                       })
+
+    DockerTask.create!({ :remote_repo => 'debian',
+                         :pull_tag => 'stretch',
+                         :image_name => 'fury-buildpack-fpm-stretch',
+                         :run => docker_run,
+                         :show_commands => show_commands
+                       })
+  end
+
+  def self.calculate_build_path(file_path)
+    root_path = File.expand_path('../../', __FILE__)
+    file_path.gsub(root_path, '/build')
+  end
 end
+
+BuildpackSpec.define_docker_containers
 
 # Requires supporting ruby files with custom matchers and macros, etc,
 # in spec/support/ and its subdirectories.
