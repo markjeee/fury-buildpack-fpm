@@ -12,7 +12,7 @@ class Packguy
       package_filename = '%s_%s_%s.deb' % [ packager.package_name, packager.version, packager.architecture ]
       pkg_file_path = fpm_exec.build(sfiles_map, package_filename, type: :deb)
 
-      Bundler.ui.info 'Created package: %s' % pkg_file_path
+      Bundler.ui.info 'Created package: %s (%s bytes)' % [ pkg_file_path, File.size(pkg_file_path) ]
 
       [ packager, pkg_file_path ]
     end
