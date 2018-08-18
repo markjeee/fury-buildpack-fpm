@@ -2,14 +2,12 @@ require 'fileutils'
 require 'bundler'
 
 class Packguy
-  autoload :RakeTools, File.expand_path('../packguy/rake_tools', __FILE__)
-  autoload :RakeTask, File.expand_path('../packguy/rake_task', __FILE__)
   autoload :PatchBundlerNoMetadataDeps, File.expand_path('../packguy/patch_bundler_no_metadata_deps', __FILE__)
-
   autoload :DebPackage, File.expand_path('../packguy/deb_package', __FILE__)
   autoload :RpmPackage, File.expand_path('../packguy/rpm_package', __FILE__)
-
   autoload :FpmExec, File.expand_path('../packguy/fpm_exec', __FILE__)
+
+  autoload :RakeTask, File.expand_path('../packguy/rake_task', __FILE__)
 
   BUNDLE_TARGET_PATH = 'bundle'
   BUNDLE_EXTENSIONS_PATH = 'extensions'

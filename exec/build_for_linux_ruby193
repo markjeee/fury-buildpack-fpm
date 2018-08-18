@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+echo "Whoami           : $(whoami)"
+echo "Which ruby       : $(which ruby)"
+echo "Using ruby       : $(ruby -v)"
+echo "Using gem        : $(gem -v)"
+echo "Using bundler    : $(bundle -v)"
+
+cd /build
+/build/exec/create_vendored_fpm /build /build/bundle_tarball /build/Gemfile19
