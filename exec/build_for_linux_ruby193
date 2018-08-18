@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+export PATH=$PATH:/usr/local/bundle/bin
+gem install bundler
+
 echo "Whoami           : $(whoami)"
 echo "Which ruby       : $(which ruby)"
 echo "Using ruby       : $(ruby -v)"

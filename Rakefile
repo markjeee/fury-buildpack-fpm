@@ -16,13 +16,13 @@ docker_run = lambda do |task, opts|
   opts
 end
 
-DockerTask.create({ :remote_repo => 'nlevel/rubydev25',
-                    :pull_tag => 'latest',
+DockerTask.create({ :remote_repo => 'ruby',
+                    :pull_tag => '2.5.1',
                     :image_name => 'fury-buildpack-fpm-ruby251',
                     :run => docker_run })
 
-DockerTask.create({ :remote_repo => 'nlevel/rubydev19',
-                    :pull_tag => 'latest',
+DockerTask.create({ :remote_repo => 'ruby',
+                    :pull_tag => '1.9.3',
                     :image_name => 'fury-buildpack-fpm-ruby193',
                     :run => docker_run })
 
@@ -50,13 +50,13 @@ end
 desc 'Create bundle for linux with ruby 2.5.1'
 task :bundle_for_linux do
   c = DockerTask.containers['fury-buildpack-fpm-ruby251']
-  c.pull; c.runi(:exec => '/build/exec/build_for_linux', :su => 'rubydev')
+  c.pull; c.runi(:exec => '/build/exec/build_for_linux')
 end
 
 desc 'Create bundle for linux with ruby 1.9.3'
 task :bundle_for_linux_ruby193 do
   c = DockerTask.containers['fury-buildpack-fpm-ruby193']
-  c.pull; c.runi(:exec => '/build/exec/build_for_linux_ruby193', :su => 'rubydev')
+  c.pull; c.runi(:exec => '/build/exec/build_for_linux_ruby193')
 end
 
 task :bundle_for_local => [ :bundle_standalone ]
