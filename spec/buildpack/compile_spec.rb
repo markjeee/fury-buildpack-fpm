@@ -2,7 +2,7 @@ require_relative '../spec_helper'
 require 'packguy'
 
 describe 'Compile stage in Buildpack' do
-  context 'when passed valid build path' do
+  context 'passed with valid build path' do
     before do
       @build_path = BuildpackSpec::VALID_BUILD_PATH
     end
@@ -31,9 +31,12 @@ describe 'Compile stage in Buildpack' do
     end
   end
 
-  context 'when invoked' do
+  context 'third-party gems' do
     before do
-      #skip 'Disabling for now'
+      unless ENV['INCLUDE_COMPILE_EXTRA_SPECS']
+        skip 'Compile third party specs skipped, unless specified: env INCLUDE_COMPILE_EXTRA_SPECS=1'
+      end
+
       BuildpackSpec::DownloadGems.check_and_download_gems_for_spec
     end
 

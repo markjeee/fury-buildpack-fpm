@@ -8,6 +8,6 @@ group :development, :test do
 
   #gem 'docker_task', :path => File.expand_path('~/work/docker_task')
   source 'https://repo.nlevel.io/ruby/' do
-    gem 'docker_task', '0.1.4.alpha.5.g7036721'
+    gem 'docker_task', '~> 0.1.4'
   end
 end

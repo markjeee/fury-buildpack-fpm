@@ -1,7 +1,8 @@
 # Overview
 
-This is a buildpack for creating Debian and RPM packages using
-fpm. Primarily designed to run within Fury's build system. Supports building native extensions as a post-install step of the target package.
+This is a buildpack for creating Debian and RPM packages using fpm. Designed to execute using Gemfury's build system, and release built packages for hosting in Gemfury's repository.
+
+Support for building native extensions is available, using a post-install step of the target package.
 
 # How to use
 
@@ -30,7 +31,7 @@ builds:
 
 # Compatibility
 
-This buildpack will detect for a gemspec file at the root path of your repo. And will use that to gather the files of your gems and other gem dependencies, then vendorized them to build the target package.
+This buildpack will detect for a gemspec (\*.gemspec) file at the root path of your repo, then use that to gather the files of your gem and gem dependencies. After which, vendorized all files to build the target package.
 
 If a gem has native extensions, the extensions are not built at the time of building the package, but rather, a post-install script is included, that builds them right after the target package is installed in the system. If any native extensions requires other system libraries, you may specify additional package dependencies to be installed prior to installing the target package.
 
