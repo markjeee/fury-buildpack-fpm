@@ -3,6 +3,10 @@ source 'https://rubygems.org'
 gem 'rake'
 gem 'fpm'
 
+source 'https://repo.nlevel.io/ruby/' do
+  gem 'packguy'
+end
+
 group :development, :test do
   gem 'rspec'
 

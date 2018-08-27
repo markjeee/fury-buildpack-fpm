@@ -10,7 +10,7 @@ GEM
       ffi (~> 1.0, >= 1.0.11)
     clamp (1.0.1)
     diff-lcs (1.3)
-    docker_task (0.1.4.alpha.3.g35e73ba)
+    docker_task (0.1.4)
       rake
     dotenv (2.5.0)
     ffi (1.9.25)
@@ -29,6 +29,8 @@ GEM
     io-like (0.3.0)
     json (1.8.6)
     mustache (0.99.8)
+    packguy (0.1.0.alpha.9.gf0b82cc)
+      bundler
     pleaserun (0.0.30)
       cabin (> 0)
       clamp
@@ -59,10 +61,11 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  docker_task (= 0.1.4.alpha.3.g35e73ba)!
+  docker_task (~> 0.1.4)!
   fpm
+  packguy!
   rake (~> 12.2.1)
   rspec
 
 BUNDLED WITH
-   1.16.2
+   1.16.4

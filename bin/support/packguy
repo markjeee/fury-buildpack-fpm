@@ -1,94 +1,19 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env bash
 
-$:.unshift File.expand_path('../../../lib', __FILE__)
-require 'packguy'
+buildpack_fpm_dir=$(cd "$(dirname $0)/../../"; pwd)
+fpm_bundle_path=$buildpack_fpm_dir/bundle
 
-fpm_exec_path = File.expand_path('../fpm', __FILE__)
-build_path = File.expand_path(ARGV[0])
+if [ -d "$fpm_bundle_path" ]; then
+    export FURY_BUILDPACK_FPM_VENDOR="$fpm_bundle_path"
 
-unless File.exists?(build_path)
-  puts 'ERROR: Build path %s do not exist, aborting.' % build_path
-  exit 1
-end
-
-$:.unshift(build_path)
-
-puts 'Using fpm path   : %s' % fpm_exec_path
-puts 'Using build path : %s' % build_path
-
-Packguy.config[:fpm_exec_path] = fpm_exec_path
-Packguy.config[:path] = build_path
-
-if ENV['GEM_SPECFILE']
-  gemspec_file = ENV['GEM_SPECFILE']
-  unless gemspec_file =~ /^\/(.+)$/
-    gemspec_file = File.join(build_path, gemspec_file)
-  end
-
-  unless File.exists?(gemspec_file)
-    puts 'ERROR: Specified gemspec file %s not found, aborting.' % gemspec_file
-    exit 1
-  end
+    packguy_ruby=$(cd "$(dirname $0)"; pwd)/packguy_vendor_ruby
+    fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
 else
-  paths = Dir.glob(File.join(build_path, '/*.gemspec'))
-  if paths.empty?
-    puts 'ERROR: No gemspec file found, aborting.'
-    exit 1
-  elsif paths.count > 1
-    puts 'ERROR: Multiple gemspec file found, aborting.'
-    exit 1
-  end
+    packguy_ruby="$(which packguy)"
+    fpm_ruby="$(which fpm)"
+fi
 
-  gemspec_file = paths[0]
-end
+export FPM_EXEC_PATH="$fpm_ruby"
 
-puts 'Using spec file  : %s' % gemspec_file
-Packguy.config[:gemspec] = gemspec_file
-
-bundle_gemfile = nil
-if ENV['BUNDLE_GEMFILE'] && !ENV['BUNDLE_GEMFILE'].empty?
-  bundle_gemfile = ENV['BUNDLE_GEMFILE']
-
-  unless bundle_gemfile =~ /^\/(.+)$/
-    bundle_gemfile = File.join(build_path, bundle_gemfile)
-  end
-
-  unless File.exists?(bundle_gemfile)
-    puts 'ERROR: Specified bundle gemfile %s not found, aborting.' % bundle_gemfile
-    exit 1
-  end
-
-  puts 'Using Gemfile    : %s' % bundle_gemfile
-  Packguy.config[:gemfile] = bundle_gemfile
-end
-
-if ENV['PACKAGE_RUBY_VERSION'] && !ENV['PACKAGE_RUBY_VERSION'].empty?
-  ruby_version = ENV['PACKAGE_RUBY_VERSION']
-  puts 'Using ruby deps  : %s' % ruby_version
-else
-  ruby_version = nil
-  puts 'Using ruby deps  : latest'
-end
-
-Packguy.config[:dependencies]['ruby'] = ruby_version
-
-if ENV['PACKAGE_DEPENDENCIES']
-  deps = ENV['PACKAGE_DEPENDENCIES'].split(',')
-  deps.each do |d|
-    if d =~ /^([^\<\>\=]+)(.+)?$/
-      pname = $~[1]
-      pver = $~[2]
-      Packguy.config[:dependencies][pname] = pver
-    end
-  end
-end
-
-puts '=================='
-
-# For now, only Debian package building is supported
-Packguy.config[:packages] = [ :deb ]
-
-Packguy.setup
-unless ENV['TEST_NOBUILD']
-  Packguy.build_package
-end
+echo "Using packguy    : $packguy_ruby"
+$packguy_ruby "$@"

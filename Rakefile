@@ -6,7 +6,6 @@ $:.unshift File.expand_path('../lib', __FILE__)
 
 require 'rspec/core/rake_task'
 require 'docker_task'
-require 'packguy'
 
 RSpec::Core::RakeTask.new('spec')
 task :default => :spec
@@ -40,7 +39,7 @@ task :bundle_standalone_tarball do
   bundle_spath = File.expand_path('../bundle', __FILE__)
 
   skip_tarball = 'SKIP_TARBALL=1' unless ENV['SKIP_TARBALL'].nil?
-  cmd = 'env %s %s/exec/create_vendored_fpm %s %s' % [ skip_tarball, root_path, root_path, bundle_spath ]
+  cmd = 'env %s %s/exec/create_vendored_gems %s %s' % [ skip_tarball, root_path, root_path, bundle_spath ]
   puts(cmd)
   Bundler.clean_system(cmd)
 

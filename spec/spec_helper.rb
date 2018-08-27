@@ -5,7 +5,6 @@ ENV['BUNDLE_GEMFILE'] = File.expand_path('../../Gemfile', __FILE__)
 Bundler.setup
 
 $:.unshift File.expand_path('../../lib', __FILE__)
-require 'packguy'
 require 'docker_task'
 require 'rspec'
 
@@ -162,18 +161,6 @@ module BuildpackSpec
     end
 
     target_vc_path
-  end
-
-  def self.packguy_setup(config = { })
-    Packguy.config.merge!({ :path => VALID_BUILD_PATH,
-                            :working_path => File.join(VALID_BUILD_PATH, 'tmp_packguy_wp'),
-                            :bundler_silent => true,
-                            :bundler_local => true
-                          }.merge(config))
-    Packguy.setup
-    copy_vendor_cache(Packguy.config[:working_path])
-
-    Packguy
   end
 
   def self.define_docker_containers

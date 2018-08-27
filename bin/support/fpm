@@ -7,9 +7,7 @@ if [ -d "$fpm_vendor_path" ]; then
   export FURY_BUILDPACK_FPM_VENDOR="$fpm_vendor_path"
   fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
 else
-  buildpack_fpm_dir=$(cd "$(dirname $0)/../.."; pwd)
-  export BUNDLE_GEMFILE="$buildpack_fpm_dir/Gemfile"
-  fpm_ruby="bundle exec fpm"
+  fpm_ruby="$(which fpm)"
 fi
 
 $fpm_ruby "$@"

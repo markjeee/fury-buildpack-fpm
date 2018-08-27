@@ -7,4 +7,4 @@ echo "Using gem        : $(gem -v)"
 echo "Using bundler    : $(bundle -v)"
 
 cd /build
-/build/exec/create_vendored_fpm /build /build/bundle_tarball
+/build/exec/create_vendored_gems /build /build/bundle_tarball

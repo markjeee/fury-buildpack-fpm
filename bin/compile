@@ -47,8 +47,6 @@ else
     echo "Distro           : $(uname -a)"
 fi
 
-echo "Using rpm        : $(rpm --version)"
-
 if [ -n "$BUILD_VERSION" ]; then
     export BUILD_VERSION=$(echo "$BUILD_VERSION" | tr '\-\+' '..')
     echo "BUILD_VERSION    : $BUILD_VERSION"
@@ -60,7 +58,8 @@ echo "Using bundler    : $(bundle -v)"
 if [ -f "$vendor_buildpack_cache_dir/$vendor_buildpack_cache_file" ]; then
     echo "Using fpm cache  : $vendor_buildpack_cache_file"
 fi
-echo "Using fpm        : $($bin_dir/support/fpm -v)"
+
+echo "Using rpm        : $(rpm --version)"
 
 if [ -f "$build/.env.fury-buildpack-fpm" ]; then
     source "$build/.env.fury-buildpack-fpm"
