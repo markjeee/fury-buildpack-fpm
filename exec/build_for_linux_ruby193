@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 
 export PATH=$PATH:/usr/local/bundle/bin
+
+echo "Updating gem and install bundler..."
+gem update --system
 gem install bundler
 
 echo "Whoami           : $(whoami)"

@@ -35,7 +35,7 @@ end
 ENV['BUNDLE_GEMFILE'] = bundle_gemfile || File.join(root_path, 'Gemfile')
 
 Bundler.ui = Bundler::UI::Shell.new
-Bundler.ui.info 'Bundling with: %s' % File.expand_path(ENV['BUNDLE_GEMFILE'])
+Bundler.ui.info 'Bundling with    : %s' % File.expand_path(ENV['BUNDLE_GEMFILE'])
 
 install_opts = { }
 install_opts[:with] = [ :default ]
