@@ -9,3 +9,5 @@ config.tmp
 spec/valid_build/tmp_packguy_wp
 /rpm/*
 /rpm_tarball/*
+/spec/valid_build/pkg/
+/vendor/buildpack-cache/bundle_ruby_*-darwin*.tar.gz
