@@ -29,7 +29,7 @@ GEM
     io-like (0.3.0)
     json (1.8.6)
     mustache (0.99.8)
-    packguy (0.1.0.alpha.9.gf0b82cc)
+    packtory (0.1.0)
       bundler
     pleaserun (0.0.30)
       cabin (> 0)
@@ -63,7 +63,7 @@ PLATFORMS
 DEPENDENCIES
   docker_task (~> 0.1.4)!
   fpm
-  packguy!
+  packtory!
   rake (~> 12.2.1)
   rspec
 
