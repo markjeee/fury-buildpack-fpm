@@ -10,6 +10,13 @@ require 'docker_task'
 RSpec::Core::RakeTask.new('spec')
 task :default => :spec
 
+task :spec_all do
+  ENV['INCLUDE_COMPILE_EXTRA_SPECS'] = '1'
+  ENV['INCLUDE_INSTALL_SPECS'] = '1'
+
+  Rake::Task['spec'].invoke
+end
+
 docker_run = lambda do |task, opts|
   opts << '-v %s:/build' % File.expand_path('../', __FILE__)
   opts

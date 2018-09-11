@@ -123,7 +123,7 @@ module BuildpackSpec
 
   def self.compile_with_gems(gem_name)
     env_vars = {
-      'PACKGUY_BUNDLE_WORKING_PATH' => buildpack_spec_bundle_working_path
+      'PACKTORY_BUNDLE_WORKING_PATH' => buildpack_spec_bundle_working_path
     }
 
     compile(spec_gem_extract_path(gem_name), env_vars, no_stdout: true)

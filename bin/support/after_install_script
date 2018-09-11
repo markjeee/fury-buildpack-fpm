@@ -19,7 +19,7 @@ fi
 if [ -f $this_dir/gem_build_extensions ]; then
     gem_build_extensions_path=$this_dir/gem_build_extensions
 else
-    gem_build_extensions_path=$PACKAGE_PATH/packguy_tools/gem_build_extensions
+    gem_build_extensions_path=$PACKAGE_PATH/packtory_tools/gem_build_extensions
 fi
 
 echo "After install script for: $PACKAGE_PATH"

@@ -3,6 +3,6 @@
 vendor_path = ENV['FURY_BUILDPACK_FPM_VENDOR']
 require File.join(vendor_path, 'bundler/setup.rb')
 
-require 'packguy'
+require 'packtory'
 
-Packguy::Command.run(ARGV)
+Packtory::Command.run(ARGV)

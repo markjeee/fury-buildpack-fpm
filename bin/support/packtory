@@ -6,14 +6,14 @@ fpm_bundle_path=$buildpack_fpm_dir/bundle
 if [ -d "$fpm_bundle_path" ]; then
     export FURY_BUILDPACK_FPM_VENDOR="$fpm_bundle_path"
 
-    packguy_ruby=$(cd "$(dirname $0)"; pwd)/packguy_vendor_ruby
+    packtory_ruby=$(cd "$(dirname $0)"; pwd)/packtory_vendor_ruby
     fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
 else
-    packguy_ruby="$(which packguy)"
+    packtory_ruby="$(which packtory)"
     fpm_ruby="$(which fpm)"
 fi
 
 export FPM_EXEC_PATH="$fpm_ruby"
 
-echo "Using packguy    : $packguy_ruby"
-$packguy_ruby "$@"
+echo "Using packtory    : $packtory_ruby"
+$packtory_ruby "$@"

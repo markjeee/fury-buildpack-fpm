@@ -73,8 +73,8 @@ if [ -n "$GEM_SPECFILE" ]; then
     eval "export GEM_SPECFILE=$GEM_SPECFILE"
 fi
 
-if [ -z "$TEST_NOPACKGUY" ]; then
-    cd "$build" && $bin_dir/support/packguy "$build" "$cache"
+if [ -z "$TEST_NOPACKTORY" ]; then
+    cd "$build" && $bin_dir/support/packtory "$build" "$cache"
     exit ${PIPESTATUS[0]}
 else
   exit 0

@@ -1,5 +1,5 @@
 require_relative '../spec_helper'
-require 'packguy'
+require 'packtory'
 require 'fileutils'
 
 describe 'Install of generated package' do
