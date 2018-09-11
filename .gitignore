@@ -11,3 +11,4 @@ spec/valid_build/tmp_packguy_wp
 /rpm_tarball/*
 /spec/valid_build/pkg/
 /vendor/buildpack-cache/bundle_ruby_*-darwin*.tar.gz
+/vendor/buildpack-cache/bundle_ruby_2.5.0_*-linux.tar.gz
