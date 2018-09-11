@@ -15,5 +15,5 @@ fi
 
 export FPM_EXEC_PATH="$fpm_ruby"
 
-echo "Using packtory    : $packtory_ruby"
+echo "Using packtory   : $packtory_ruby"
 $packtory_ruby "$@"
