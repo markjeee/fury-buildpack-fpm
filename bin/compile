@@ -24,6 +24,7 @@ fi
 
 bin_dir=$(cd $(dirname $0); pwd)
 buildpack_fpm_dir=$(dirname "$bin_dir")
+tmp_rpm_dir=/tmp/rpm_fury_buildpack_pactory
 
 vendor_buildpack_cache_dir=$buildpack_fpm_dir/vendor/buildpack-cache
 vendor_buildpack_cache_file=$(ruby -e "puts 'bundle_%s_%s_%s.tar.gz' % [ defined?(RUBY_ENGINE) ? RUBY_ENGINE : 'ruby', RbConfig::CONFIG['ruby_version'], RbConfig::CONFIG['arch'] ]")
@@ -35,10 +36,10 @@ fi
 
 rpm_cache_file=$vendor_buildpack_cache_dir/rpm_$(uname -s)_$(uname -m).tar.gz
 if [ -f "$rpm_cache_file" ]; then
-    mkdir -p $buildpack_fpm_dir/rpm
-    cd $buildpack_fpm_dir/rpm; tar -xzpf $rpm_cache_file
-    export PATH=$buildpack_fpm_dir/rpm/bin:$PATH
-    export LD_LIBRARY_PATH=$buildpack_fpm_dir/rpm/lib:$LD_LIBRARY_PATH
+    mkdir -p $tmp_rpm_dir
+    cd $tmp_rpm_dir; tar -xzpf $rpm_cache_file
+    export PATH=$tmp_rpm_dir/bin:$PATH
+    export LD_LIBRARY_PATH=$tmp_rpm_dir/lib:$LD_LIBRARY_PATH
 fi
 
 if [ -f "/etc/issue.net" ]; then
