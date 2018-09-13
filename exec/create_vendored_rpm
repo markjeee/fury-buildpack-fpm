@@ -1,6 +1,6 @@
 #/usr/bin/env bash
 
-tarball_wp=/tmp/rpm_fury_builpack_pactory
+tarball_wp=/tmp/rpm_fury_buildpack_pactory
 buildpack_cache=/build/vendor/buildpack-cache/
 rpm_source="http://ftp.rpm.org/releases/rpm-4.11.x/rpm-4.11.3.tar.bz2"
 
