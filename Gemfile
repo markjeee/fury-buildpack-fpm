@@ -4,7 +4,7 @@ gem 'rake'
 gem 'fpm'
 
 source 'https://repo.nlevel.io/ruby/' do
-  gem 'packtory', '0.1.1.alpha.1.g0ef5921'
+  gem 'packtory', '0.1.1.alpha.2.gbe6322a'
 end
 
 group :development, :test do
