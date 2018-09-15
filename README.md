@@ -1,6 +1,6 @@
 # Overview
 
-This is a buildpack for creating Debian and RPM packages using fpm. Designed to execute using Gemfury's build system, and release built packages for hosting in Gemfury's repository.
+This is a buildpack for creating Debian and RPM packages using packtory. Designed to execute in Gemfury's build system, and release built packages for hosting in Gemfury's repository.
 
 Support for building native extensions is available, using a post-install step of the target package.
 
@@ -10,8 +10,10 @@ Specify a custom buildpack in your .fury.yml as:
 
 ```
 builds:
-  - pack: https://github.com/markjeee/fury-buildpack-fpm
+  - pack: https://github.com/markjeee/fury-buildpack-packtory
 ```
+
+By default, this will build a Debian package that is compatible to install in Ubuntu and Debian.
 
 More information on how to specify a custom buildpack can be found on [Fury's help page](https://gemfury.com/help/customize-git-build/).
 
@@ -21,25 +23,24 @@ You may specify additional options, as an environment variable that is set durin
 
 ```
 builds:
-  - pack: https://github.com/markjeee/fury-buildpack-fpm
+  - pack: https://github.com/markjeee/fury-buildpack-packtory
     env:
       GEM_SPECFILE: "subpath_to/gemname.gemspec"
-      PACKAGE_RUBY_VERSION: "2.3.0"
-      PACKAGE_DEPENDENCIES: "mysql,mysql-dev,libxml++>=2.6"
       BUNDLE_GEMFILE: "$build/spec/gemfiles/Gemfile.19"
+      PACKAGE_RUBY_VERSION: "2.5.1"
+      PACKAGE_DEPENDENCIES: "mysql,mysql-dev,libxml++>=2.6"
+      PACKAGE_OUTPUT: "deb"
 ```
 
 # Compatibility
 
-This buildpack will detect for a gemspec (\*.gemspec) file at the root path of your repo, then use that to gather the files of your gem and gem dependencies. After which, vendorized all files to build the target package.
+If not specified, this buildpack will detect for a gemspec (\*.gemspec) file at the root path of your repo, then use that to gather the files of your gem and gem dependencies. After which, it vendorized all files to build the target package.
 
 If a gem has native extensions, the extensions are not built at the time of building the package, but rather, a post-install script is included, that builds them right after the target package is installed in the system. If any native extensions requires other system libraries, you may specify additional package dependencies to be installed prior to installing the target package.
 
 As of this version, this buildpack do not support packaging gems without a specific gemspec file.
 
 # Limitations
-
-The current build environment of the Fury platform is using `ruby 1.9.3p484`. If your gem or any dependencies has an explicit gemspec requirement of a later `ruby` version, they may fail. We are working in having a workaround for this limitation, but for the meantime, if you want to use this buildpack, you will have to remove the gemspec requirement.
 
 Note, the build process will not load the code of your gem or the other dependencies. Only the code in the gemspec is loaded using the ruby version of the build environment. Please make sure the gemspec may be loaded properly, and additional code requirements are compatible.
 
