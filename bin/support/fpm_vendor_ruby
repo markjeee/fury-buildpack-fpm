@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-vendor_path = ENV['FURY_BUILDPACK_FPM_VENDOR']
+vendor_path = ENV['FURY_BUILDPACK_PACKTORY_VENDOR']
 require File.join(vendor_path, 'bundler/setup.rb')
 
 require 'fpm'
