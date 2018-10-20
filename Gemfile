@@ -3,8 +3,8 @@ source 'https://rubygems.org'
 gem 'rake'
 gem 'fpm'
 
-source 'https://repo.nlevel.io/ruby/' do
-  gem 'packtory', '0.1.1.alpha.2.gbe6322a'
+source 'https://gem.fury.io/cli/' do
+  gem 'packtory'
 end
 
 group :development, :test do
