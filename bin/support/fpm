@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 
 buildpack_packtory_dir=$(cd "$(dirname $0)/../../"; pwd)
-fpm_vendor_path=$buildpack_packtory_dir/bundle
+bundle_path=$buildpack_packtory_dir/bundle
 
-if [ -d "$fpm_vendor_path" ]; then
-  export FURY_BUILDPACK_PACKTORY_VENDOR="$fpm_vendor_path"
-  fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
+if [ -d "$bundle_path" ]; then
+    export FURY_BUILDPACK_PACKTORY_VENDOR="$bundle_path"
+
+    fpm_ruby=$(cd "$(dirname $0)"; pwd)/fpm_vendor_ruby
 else
-  fpm_ruby="$(which fpm)"
+    fpm_ruby="$(which fpm)"
 fi
 
 $fpm_ruby "$@"
